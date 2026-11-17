@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>3D 互動檢視｜空間三平面相交幾何形態</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="../assets/auth.js"></script>
+  <style>
+    :root { --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0b0f19; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; --text-body: #cbd5e1; --btn-bg: #1e293b; }
+    body.light-theme { --bg-base: #f8fafc; --bg-panel: #ffffff; --bg-card: #f1f5f9; --border: #cbd5e1; --accent: #2563eb; --text-main: #0f172a; --text-muted: #475569; --text-body: #1e293b; --btn-bg: #e2e8f0; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; }
+    header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .header-actions { display: flex; gap: 6px; }
+    .hdr-btn { background: var(--btn-bg); border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; }
+    #btn-mobile-toggle { display: none; }
+    #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
+    #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.88; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 430px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
+    .card strong { color: var(--text-main); }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 9px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
+    button.ctrl.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .diag-box { margin-top: 10px; padding: 10px; border-radius: 6px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    @media (max-width: 768px) {
+      #btn-mobile-toggle { display: inline-block; }
+      #main { flex-direction: column; }
+      #canvas-container { flex: 1; }
+      #panel { max-width: 100%; flex: 1.1; border-left: none; border-top: 1px solid var(--border); }
+      #panel.collapsed { display: none; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 目錄</a>
+  <h1 id="header-title">載入中...</h1>
+  <div class="header-actions">
+    <button id="btn-theme" class="hdr-btn">淺色模式</button>
+    <button id="btn-mobile-toggle" class="hdr-btn">隱藏解析</button>
+  </div>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="hint-badge">單指拖曳旋轉 · 切換觀察三平面相交與解的個數</div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <h2>題目敘述與克拉瑪法則幾何對照</h2>
+      <p id="q-text"></p>
+    </div>
+
+    <div class="card">
+      <h2>切換三平面相交形態（4 大必考模型）</h2>
+      <div class="mode-grid" id="mode-btns">
+        <button class="ctrl active" data-mode="0">1. 交於唯一一點（恰一解）</button>
+        <button class="ctrl" data-mode="1">2. 三平面交於一線（無限多解）</button>
+        <button class="ctrl" data-mode="2">3. 三角柱狀兩兩相交（無解）</button>
+        <button class="ctrl" data-mode="3">4. 兩平行面被第三面截（無解）</button>
+      </div>
+      <div class="diag-box" id="mode-desc"></div>
+    </div>
+
+    <div class="card">
+      <h2>核心解題直覺（3 步判別法）</h2>
+      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
+  const urlParams = new URLSearchParams(window.location.search);
+  const probId = urlParams.get('id') || 'vec-07';
+
+  const toggleBtn = document.getElementById('btn-mobile-toggle');
+  const panelEl = document.getElementById('panel');
+  toggleBtn.onclick = () => {
+    panelEl.classList.toggle('collapsed');
+    toggleBtn.textContent = panelEl.classList.contains('collapsed') ? '顯示解析' : '隱藏解析';
+    window.dispatchEvent(new Event('resize'));
+  };
+
+  fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
+    const prob = data.problems.find(p => p.id === probId) || data.problems[data.problems.length - 1];
+    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
+    document.getElementById('header-title').textContent = `${prob.num}. ${prob.title}`;
+    document.getElementById('q-text').innerHTML = prob.questionLatex;
+    const ol = document.getElementById('steps-list');
+    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+    renderMathInElement(document.body, katexOpts);
+  });
+
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.set(8.5, 6.5, 9.5);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // 建立 3 個半透明平面物件
+  function createPlane(colorHex) {
+    const geo = new THREE.PlaneGeometry(6.5, 6.5);
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })));
+    group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: colorHex })));
+    scene.add(group);
+    return group;
+  }
+  const p1 = createPlane(0x3b82f6); // 藍
+  const p2 = createPlane(0x10b981); // 綠
+  const p3 = createPlane(0xf97316); // 橘
+
+  // 高亮交點與交線標記
+  const pointMarker = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  scene.add(pointMarker);
+
+  const lineMarker = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -3.5, 0), new THREE.Vector3(0, 3.5, 0)]), new THREE.LineBasicMaterial({ color: 0xfacc15 }));
+  scene.add(lineMarker);
+
+  const modeInfos = [
+    "<strong>條件特徵：</strong>$\\Delta \\neq 0$（三法向量不共面）。<br><strong>幾何意義：</strong>如牆角三面相交，唯一交點即為方程組唯一解。",
+    "<strong>條件特徵：</strong>$\\Delta = \\Delta_x = \\Delta_y = \\Delta_z = 0$（三法向量共面且無平行面）。<br><strong>幾何意義：</strong>如書本翻開的三頁，共用同一條交線 $L$（無限多解）。",
+    "<strong>條件特徵：</strong>$\\Delta = 0$，但 $\\Delta_x, \\Delta_y, \\Delta_z$ 不全為 $0$（三法向量共面）。<br><strong>幾何意義：</strong>兩兩相交出三條平行線，圍成中空三角柱（無共同交點，無解）。",
+    "<strong>條件特徵：</strong>兩平面法向量成比例但常數項不成比例（兩平行面）。<br><strong>幾何意義：</strong>兩平行面永不相交，被第三面截出兩條平行線（無解）。"
+  ];
+
+  function setMode(idx) {
+    document.querySelectorAll('#mode-btns button').forEach((b, i) => b.classList.toggle('active', i === idx));
+    const descEl = document.getElementById('mode-desc');
+    descEl.innerHTML = modeInfos[idx];
+    renderMathInElement(descEl, katexOpts);
+
+    // 重置位置與旋轉
+    [p1, p2, p3].forEach(p => { p.position.set(0, 0, 0); p.rotation.set(0, 0, 0); });
+    pointMarker.visible = false;
+    lineMarker.visible = false;
+
+    if (idx === 0) {
+      // 交於一點 (三互相垂直平面)
+      p1.rotation.x = Math.PI / 2;
+      p2.rotation.y = Math.PI / 2;
+      pointMarker.visible = true;
+    } else if (idx === 1) {
+      // 交於一線 (繞 Y 軸旋轉 0°, 60°, 120°)
+      p1.rotation.y = 0;
+      p2.rotation.y = Math.PI / 3;
+      p3.rotation.y = (2 * Math.PI) / 3;
+      lineMarker.visible = true;
+    } else if (idx === 2) {
+      // 三角柱兩兩相交
+      p1.rotation.y = 0; p1.position.set(0, 0, 1.1);
+      p2.rotation.y = (2 * Math.PI) / 3; p2.position.set(0.95, 0, -0.55);
+      p3.rotation.y = (4 * Math.PI) / 3; p3.position.set(-0.95, 0, -0.55);
+    } else if (idx === 3) {
+      // 兩平行面被第三面截
+      p1.rotation.x = Math.PI / 2; p1.position.y = 1.4;
+      p2.rotation.x = Math.PI / 2; p2.position.y = -1.4;
+      p3.rotation.x = Math.PI / 5;
+    }
+  }
+
+  document.querySelectorAll('#mode-btns button').forEach(btn => {
+    btn.onclick = () => setMode(Number(btn.dataset.mode));
+  });
+  setMode(0);
+
+  document.getElementById('btn-theme').onclick = (e) => {
+    const isL = document.body.classList.toggle('light-theme');
+    e.target.textContent = isL ? '深色模式' : '淺色模式';
+  };
+
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => {
+    if (!container.clientWidth || !container.clientHeight) return;
+    camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+</script>
+</body>
+</html>
