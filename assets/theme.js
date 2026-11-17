@@ -1,4 +1,4 @@
-// assets/theme.js - 全站 3D 雙主題高對比色票與文字標籤引擎
+// assets/theme.js - 全站 3D 雙主題高對比色票、預設淺色控制與文字標籤引擎
 const VISUAL_THEME = {
   dark: {
     plane: 0x3b82f6, planeEdge: 0x60a5fa, planeOpacity: 0.32,
@@ -16,8 +16,14 @@ const VISUAL_THEME = {
   }
 };
 
+// 集中追蹤所有已建立的 3D 文字標籤，主題切換時自動重繪
+const _trackedSprites = [];
+
 function getVisualTheme() {
-  return document.body.classList.contains('light-theme') ? VISUAL_THEME.light : VISUAL_THEME.dark;
+  const isLight = document.body
+    ? document.body.classList.contains('light-theme')
+    : (localStorage.getItem('math3d_theme') !== 'dark');
+  return isLight ? VISUAL_THEME.light : VISUAL_THEME.dark;
 }
 
 // 動態建立或更新 3D 空間文字標籤
@@ -28,6 +34,7 @@ function makeThemeSprite(text, colorKey, pos, scale = [2.1, 0.52, 1]) {
   sp.position.copy(pos);
   sp.scale.set(...scale);
   sp.userData = { text, colorKey, canvas: c };
+  _trackedSprites.push(sp);
   refreshSpriteTexture(sp);
   return sp;
 }
@@ -46,3 +53,35 @@ function refreshSpriteTexture(sp) {
   sp.material.map = new THREE.CanvasTexture(canvas);
   sp.material.needsUpdate = true;
 }
+
+// === 全站預設淺色模式初始化與跨頁同步 ===
+(function initGlobalTheme() {
+  const saved = localStorage.getItem('math3d_theme');
+  const shouldBeLight = saved !== 'dark'; // 預設一律淺色，除非使用者手動切去深色
+
+  function applyGlobalTheme() {
+    if (!document.body) return;
+    document.body.classList.toggle('light-theme', shouldBeLight);
+
+    const btn = document.getElementById('btn-theme');
+    if (btn) {
+      btn.textContent = shouldBeLight ? '深色模式' : '淺色模式';
+      btn.addEventListener('click', () => {
+        // 等各頁原本的 click handler 切換完 class 後再讀取狀態並同步
+        setTimeout(() => {
+          const nowLight = document.body.classList.contains('light-theme');
+          localStorage.setItem('math3d_theme', nowLight ? 'light' : 'dark');
+          btn.textContent = nowLight ? '深色模式' : '淺色模式';
+          _trackedSprites.forEach(refreshSpriteTexture);
+        }, 0);
+      });
+    }
+    _trackedSprites.forEach(refreshSpriteTexture);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyGlobalTheme);
+  } else {
+    applyGlobalTheme();
+  }
+})();
