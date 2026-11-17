@@ -3,39 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>高中數學 3D 空間視覺化圖庫</title>
+  <title>高中數學 3D 空間視覺化講義</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <script src="assets/auth.js"></script>
   <style>
-    :root { --bg-base: #0b0f19; --bg-card: #131a2a; --bg-hover: #192236; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; }
+    :root {
+      --bg-base: #0b0f19;
+      --bg-card: #131a2a;
+      --bg-hover: #192236;
+      --border: #243049;
+      --accent: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
-    body { margin: 0; background: var(--bg-base); color: var(--text-main); padding: 32px 20px; line-height: 1.6; }
-    .container { max-width: 900px; margin: 0 auto; }
-    header { margin-bottom: 28px; border-bottom: 1px solid var(--border); padding-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
-    .eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
-    h1 { font-size: 24px; font-weight: 700; margin: 0 0 6px 0; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); padding: 36px 20px 64px; line-height: 1.6; }
+    .container { max-width: 920px; margin: 0 auto; }
+
+    /* 頂部標題區：乾淨直接 */
+    header {
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px 0; letter-spacing: 0.02em; }
     p.sub { color: var(--text-muted); font-size: 14px; margin: 0; }
-    .status-pill { font-size: 12px; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); }
-    .status-pill.unlocked { border-color: #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); }
-    .unit-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .status-pill {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+    }
+    .status-pill.unlocked {
+      border-color: #10b981;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    /* 單元切換頁籤 */
+    .unit-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
     .tab { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); }
     .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .tab.disabled { opacity: 0.45; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-    .card:hover { border-color: var(--accent); background: var(--bg-hover); }
-    .meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .tab.disabled { opacity: 0.4; }
+
+    /* 章節分組標題 */
+    .section-group { margin-bottom: 36px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-left: 10px;
+      border-left: 3px solid var(--accent);
+    }
+    .section-header h3 { font-size: 15px; font-weight: 700; margin: 0; color: var(--text-main); }
+    .section-header span { font-size: 12.5px; color: var(--text-muted); }
+
+    /* 整卡可點擊設計，拿掉冗贅按鈕 */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 14px; }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+      transform: translateY(-2px);
+    }
+    .card.tool-card {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: linear-gradient(145deg, #131a2a 0%, #152138 100%);
+    }
+    .meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .meta-left { display: flex; align-items: center; gap: 8px; }
-    .num { font-family: monospace; font-size: 12px; color: var(--accent); font-weight: 700; background: rgba(59, 130, 246, 0.12); padding: 2px 8px; border-radius: 4px; }
-    .tag { font-size: 12px; color: var(--text-muted); }
+    .num {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 700;
+      background: rgba(59, 130, 246, 0.14);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .tag { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
     .badge-free { font-size: 11px; color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
     .badge-lock { font-size: 11px; color: #facc15; background: rgba(250, 204, 21, 0.12); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-    .card h2 { font-size: 17px; margin: 0 0 10px 0; font-weight: 600; }
-    .card p { font-size: 13.5px; color: var(--text-muted); margin: 0 0 20px 0; }
-    .btn { display: inline-flex; justify-content: center; background: #1e293b; color: var(--text-main); border: 1px solid var(--border); text-decoration: none; padding: 9px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; }
-    .card:hover .btn { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .card h2 { font-size: 16.5px; margin: 0 0 8px 0; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .arrow { color: var(--text-muted); font-size: 15px; transition: transform 0.15s, color 0.15s; }
+    .card:hover .arrow { color: var(--accent); transform: translateX(3px); }
+    .card p { font-size: 13.5px; color: var(--text-muted); margin: 0; }
+
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -43,55 +117,93 @@
   <div class="container">
     <header>
       <div>
-        <div class="eyebrow" id="unit-code">108 課綱視覺化模型庫</div>
-        <h1 id="unit-title">載入中...</h1>
-        <p class="sub" id="unit-sub"></p>
+        <h1 id="unit-title">高二下數A｜空間向量與平面直線</h1>
+        <p class="sub" id="unit-sub">108 課綱核心空間幾何題型與自訂座標沙盒</p>
       </div>
-      <div id="auth-status" class="status-pill">目前狀態：免費體驗版</div>
+      <div id="auth-status" class="status-pill">免費體驗版（01～02 題開放）</div>
     </header>
+
     <nav class="unit-tabs">
-      <div class="tab active">高二下數A｜空間向量與平面（已上線）</div>
-      <div class="tab disabled">高二上數A｜三角函數波形（規劃中）</div>
-      <div class="tab disabled">高三選修數甲｜圓錐曲線截痕（規劃中）</div>
+      <div class="tab active">空間向量與平面直線</div>
+      <div class="tab disabled">三角函數波形（建置中）</div>
+      <div class="tab disabled">圓錐曲線截痕（建置中）</div>
     </nav>
-    <div class="grid" id="problem-list"></div>
+
+    <div id="sections-container"></div>
   </div>
+
   <script>
     const unlocked = typeof isUnlocked === "function" && isUnlocked();
     if (unlocked) {
       const pill = document.getElementById("auth-status");
-      pill.textContent = "目前狀態：完整版已解鎖";
+      pill.textContent = "完整版已解鎖";
       pill.classList.add("unlocked");
     }
+
+    // 依題號自動分組（不需改 JSON 結構也能自動分類）
+    const SECTIONS = [
+      { title: "自由繪圖工具", desc: "段考題給定具體座標或方程式時，直接輸入數字看相對位置", ids: ["vec-sandbox"] },
+      { title: "一、空間概念與立體幾何", desc: "無座標系下的對稱性、三垂線與正四面體結構", ids: ["vec-01", "vec-02", "vec-03"] },
+      { title: "二、空間平面與角平分面", desc: "法向量夾角、角平分面判別、投影對稱與三平面相交", ids: ["vec-04", "vec-05", "vec-07"] },
+      { title: "三、空間直線與距離", desc: "歪斜線公垂距、線面最小角與點到直線距離", ids: ["vec-06", "vec-08", "vec-09"] }
+    ];
 
     fetch('data/space-vector.json?v=' + Date.now())
       .then(res => res.json())
       .then(data => {
-        document.getElementById('unit-code').textContent = (data.unitCode || 'G11-S2') + ' · 互動幾何模組';
-        document.getElementById('unit-title').textContent = data.unitTitle;
-        document.getElementById('unit-sub').textContent = data.subtitle;
-        const list = document.getElementById('problem-list');
-        data.problems.forEach(p => {
-          const needLock = p.locked && !unlocked;
-          const badgeHtml = !p.locked
-            ? `<span class="badge-free">免費體驗</span>`
-            : (unlocked ? `<span class="badge-free">已解鎖</span>` : `<span class="badge-lock">完整版專享</span>`);
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <div>
-              <div class="meta">
-                <div class="meta-left"><span class="num">${p.num}</span><span class="tag">${p.tag}</span></div>
-                ${badgeHtml}
-              </div>
-              <h2>${p.title}</h2>
-              <p>${p.questionLatex}</p>
+        const container = document.getElementById('sections-container');
+        const problemMap = new Map(data.problems.map(p => [p.id, p]));
+
+        SECTIONS.forEach(sec => {
+          const items = sec.ids.map(id => problemMap.get(id)).filter(Boolean);
+          if (!items.length) return;
+
+          const group = document.createElement('section');
+          group.className = 'section-group';
+          group.innerHTML = `
+            <div class="section-header">
+              <h3>${sec.title}</h3>
+              <span>${sec.desc}</span>
             </div>
-            <a class="btn" href="${p.template}?id=${p.id}">${needLock ? '輸入通行碼檢視 →' : '進入 3D 互動檢視'}</a>
+            <div class="grid"></div>
           `;
-          list.appendChild(card);
+
+          const grid = group.querySelector('.grid');
+          items.forEach(p => {
+            const needLock = p.locked && !unlocked;
+            const badgeHtml = !p.locked
+              ? `<span class="badge-free">免費體驗</span>`
+              : (unlocked ? `<span class="badge-free">已解鎖</span>` : `<span class="badge-lock">需通行碼</span>`);
+
+            // 去除舊 JSON 中殘留的「考題特徵：」「適用情境：」前綴，讓語氣更像講義
+            const cleanDesc = (p.questionLatex || '')
+              .replace(/<strong>(考題特徵|適用情境)：<\/strong>/g, '');
+
+            const card = document.createElement('a');
+            card.className = 'card' + (p.id === 'vec-sandbox' ? ' tool-card' : '');
+            card.href = `${p.template}?id=${p.id}`;
+            card.innerHTML = `
+              <div>
+                <div class="meta">
+                  <div class="meta-left"><span class="num">${p.num}</span><span class="tag">${p.tag}</span></div>
+                  ${badgeHtml}
+                </div>
+                <h2><span>${p.title}</span><span class="arrow">${needLock ? '🔒' : '→'}</span></h2>
+                <p>${cleanDesc}</p>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+
+          container.appendChild(group);
         });
-        renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false }
+          ]
+        });
       });
   </script>
 </body>
