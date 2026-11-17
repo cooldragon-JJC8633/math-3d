@@ -6,12 +6,11 @@
     {
       "id": "vec-01",
       "num": "01",
+      "locked": false,
       "tag": "正立方體截面",
       "title": "截面 △BDE 與體對角線 AG 之垂直關係",
       "template": "templates/cube-section.html",
-      "params": {
-        "side": 6
-      },
+      "params": { "side": 6 },
       "questionLatex": "正立方體 $ABCD-EFGH$ 之邊長為 $a$，求頂點 $A$ 至截面 $\\triangle BDE$ 的距離，並驗證體對角線 $AG \\perp$ 平面 $BDE$。",
       "steps": [
         "<strong>對稱性判斷：</strong>$A$ 至 $B, D, E$ 皆為邊長 $a$；$G$ 至 $B, D, E$ 皆為面對角線 $\\sqrt{2}a$。兩等腰三角錐共底面，故連線 $AG$ 必垂直平分通過截面重心。",
@@ -22,14 +21,11 @@
     {
       "id": "vec-02",
       "num": "02",
+      "locked": false,
       "tag": "三垂線定理",
       "title": "空間直線與平面之三垂線構造",
       "template": "templates/three-perp.html",
-      "params": {
-        "heightPA": 4,
-        "distAB": 3,
-        "distBC": 12
-      },
+      "params": { "heightPA": 4, "distAB": 3, "distBC": 12 },
       "questionLatex": "直線 $PA$ 垂直平面 $E$ 於 $A$，平面 $E$ 上有一直線 $L$。過 $A$ 作 $AB \\perp L$ 於 $B$，且 $C \\in L$。若 $PA = 4,\\; AB = 3,\\; BC = 12$，求斜線段 $PC$ 長。",
       "steps": [
         "<strong>兩垂直推第三垂直：</strong>已知 $PA \\perp E$（第一垂）且 $AB \\perp L$（第二垂），由三垂線定理得斜線 $PB \\perp L$（第三垂）。",
@@ -40,12 +36,11 @@
     {
       "id": "vec-03",
       "num": "03",
+      "locked": true,
       "tag": "正四面體幾何",
       "title": "正四面體之正高、兩面角與歪斜線公垂距",
       "template": "templates/tetrahedron.html",
-      "params": {
-        "edge": 6
-      },
+      "params": { "edge": 6 },
       "questionLatex": "設正四面體 $A-BCD$ 之稜長為 $a$，求：(1) 頂點 $A$ 至底面 $BCD$ 的高 $AH$；(2) 相鄰兩側面之兩面角 $\\theta$ 餘弦值；(3) 對稜 $AB$ 與 $CD$ 之公垂線段長。",
       "steps": [
         "<strong>重心投影求正高：</strong>$A$ 至 $B, C, D$ 等距，故垂足 $H$ 為正 $\\triangle BCD$ 外心（即重心），$BH = \\frac{\\sqrt{3}}{3}a$，由畢氏定理得 $AH = \\sqrt{a^2 - (\\frac{\\sqrt{3}}{3}a)^2} = \\frac{\\sqrt{6}}{3}a$。",
@@ -56,12 +51,11 @@
     {
       "id": "vec-04",
       "num": "04",
+      "locked": true,
       "tag": "二面角與法向量",
       "title": "兩平面夾角與法向量方向之互補判別",
       "template": "templates/dihedral-angle.html",
-      "params": {
-        "angle": 60
-      },
+      "params": { "angle": 60 },
       "questionLatex": "設兩平面 $E_1, E_2$ 相交於直線 $L$，其法向量分別為 $\\vec{n}_1, \\vec{n}_2$。說明為何法向量夾角有時等於二面角，有時卻與二面角互補？",
       "steps": [
         "<strong>四邊形內角和 $360^\\circ$ 原理：</strong>從交線 $L$ 側視過去，兩平面與兩法向量構成四邊形，其中兩處為 $90^\\circ$，故二面角 $\\theta$ 與法向量夾角 $\\phi$ 之和必為 $180^\\circ$（兩法向量同時朝外時互補）。",
