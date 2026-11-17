@@ -24,22 +24,26 @@
     #btn-mobile-toggle { display: none; }
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
     #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
-    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.9; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
-    #panel { flex: 1; max-width: 430px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.92; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
-    .card p { font-size: 13.5px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
+    .card h2 { font-size: 12px; letter-spacing: 0.05em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p { font-size: 13px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
     .card strong { color: var(--text-main); }
+    .slider-box { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12.5px; }
+    .slider-label { display: flex; justify-content: space-between; font-weight: 600; color: var(--text-main); }
+    input[type="range"] { width: 100%; accent-color: var(--accent); margin: 5px 0 8px; }
+    .readout-bar { display: flex; justify-content: space-between; padding: 7px 10px; border-radius: 6px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 12.5px; }
     .stepper-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--bg-panel); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; }
     .step-indicator { font-size: 12.5px; font-weight: 700; color: var(--accent); }
-    .step-btns { display: flex; gap: 6px; }
-    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 7px 11px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .step-btns { display: flex; gap: 6px; flex-shrink: 0; }
+    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
     button.ctrl:disabled { opacity: 0.4; cursor: not-allowed; }
     button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     ol.steps { padding-left: 18px; margin: 0; display: flex; flex-direction: column; gap: 8px; }
-    ol.steps li { font-size: 13px; line-height: 1.6; color: var(--text-muted); padding: 6px 8px; border-radius: 6px; border-left: 2px solid transparent; }
-    ol.steps li.active-step { color: var(--text-body); background: rgba(59, 130, 246, 0.08); border-left-color: var(--accent); }
+    ol.steps li { font-size: 13px; line-height: 1.65; color: var(--text-muted); padding: 7px 9px; border-radius: 6px; border: 1px solid transparent; transition: 0.2s; }
+    ol.steps li.active-step { color: var(--text-body); background: rgba(37, 99, 235, 0.08); border-left-color: var(--accent); border-color: var(--accent); }
     @media (max-width: 768px) {
       #btn-mobile-toggle { display: inline-block; }
       #main { flex-direction: column; }
@@ -49,25 +53,37 @@
     }
   </style>
 </head>
-<body>
+<body class="light-theme">
 <header>
   <a href="../index.html">← 目錄</a>
-  <h1 id="header-title">載入中...</h1>
+  <h1 id="header-title">點到空間直線距離：外積面積法與垂足內積法</h1>
   <div class="header-actions">
-    <button id="btn-theme" class="hdr-btn">淺色模式</button>
+    <button id="btn-theme" class="hdr-btn">深色模式</button>
     <button id="btn-mobile-toggle" class="hdr-btn">隱藏解析</button>
   </div>
 </header>
 
 <div id="main">
   <div id="canvas-container">
-    <div id="hint-badge">單指拖曳旋轉 · 觀察外積平行四邊形面積與垂足內積</div>
+    <div id="hint-badge">拖曳滑桿移動線上動點 Q(t) · 觀察當 Q 抵達垂足 H 時內積歸零且距離最短</div>
   </div>
   <div id="panel">
     <div class="card">
-      <h2>題目敘述與雙解法幾何對照</h2>
-      <p id="q-text"></p>
+      <h2>題目情境與動點參數測試</h2>
+      <p>給定空間一點 $P$ 與直線 $L$（參數式 $Q(t) = A + t\vec{v}$），比較「外積平行四邊形面積法」與「垂足內積為零法」。</p>
+      <div class="slider-box">
+        <div class="slider-label">
+          <span>移動線上動點 $Q(t)$ 參數 $t$</span>
+          <span id="val-t" style="color:var(--accent);">t = 0.40</span>
+        </div>
+        <input type="range" id="slider-t" min="-0.4" max="2.2" step="0.05" value="0.4" />
+        <div class="readout-bar">
+          <span id="readout-dist">線段長 $|PQ| = 3.22$</span>
+          <span id="readout-dot" style="color:var(--accent); font-weight:700;">$\vec{PQ}\cdot\vec{v} = -3.60$</span>
+        </div>
+      </div>
     </div>
+
     <div class="card">
       <h2>平滑運鏡與視角控制</h2>
       <div class="btn-group">
@@ -75,6 +91,7 @@
         <button id="btn-reset" class="ctrl">重設預設 3D 視角</button>
       </div>
     </div>
+
     <div class="card">
       <h2>逐步拆解構造（Step-by-Step）</h2>
       <div class="stepper-bar">
@@ -84,7 +101,11 @@
           <button id="btn-next" class="ctrl primary">下一步</button>
         </div>
       </div>
-      <ol id="steps-list" class="steps"></ol>
+      <ol id="steps-list" class="steps">
+        <li class="active-step"><strong>建立斜邊與方向向量：</strong>在直線 $L$ 上任取一點 $A$ 並抓出方向向量 $\vec{v}$，連接 $\vec{AP}$。</li>
+        <li><strong>方法一｜外積平行四邊形面積法（只求距離最快）：</strong>以 $\vec{AP}$ 與 $\vec{v}$ 張成平行四邊形，面積除以底邊長即為高：$d(P, L) = \frac{|\vec{AP} \times \vec{v}|}{|\vec{v}|}$。</li>
+        <li><strong>方法二｜垂足內積法（連帶求垂足 $H$ 與對稱點）：</strong>設垂足 $H(t) = A + t\vec{v}$，利用 $\vec{PH} \perp \vec{v}$（即 $\vec{PH} \cdot \vec{v} = 0$）解出唯一 $t$ 值，代回即得垂足 $H$（最短距離 $d = 3.00$）。</li>
+      </ol>
     </div>
   </div>
 </div>
@@ -103,23 +124,16 @@
   };
 
   fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
-    const prob = data.problems.find(p => p.id === probId) || data.problems[data.problems.length - 1];
-    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
-    document.getElementById('header-title').textContent = `${prob.num}. ${prob.title}`;
-    document.getElementById('q-text').innerHTML = prob.questionLatex;
-    const ol = document.getElementById('steps-list');
-    prob.steps.forEach((s, idx) => {
-      const li = document.createElement('li'); li.innerHTML = s;
-      if (idx === 0) li.classList.add('active-step');
-      ol.appendChild(li);
-    });
+    const prob = data.problems.find(p => p.id === probId);
+    if (prob && typeof enforcePageLock === "function") enforcePageLock(prob.locked);
     renderMathInElement(document.body, katexOpts);
-  });
+  }).catch(() => renderMathInElement(document.body, katexOpts));
 
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  const camDef = new THREE.Vector3(7.5, 5.5, 9.5), camPlane = new THREE.Vector3(0, 1.5, 10.5);
+  const camDef = new THREE.Vector3(7.2, 5.6, 9.6);
+  const camPlane = new THREE.Vector3(2.4, 3.8, 9.2);
   camera.position.copy(camDef);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -134,32 +148,49 @@
   controls.addEventListener('start', () => { targetCamPos = null; });
 
   const th0 = getVisualTheme();
+
+  // 地板網格增加空間感
+  const gridHelper = new THREE.GridHelper(10, 10, 0x94a3b8, 0xcbd5e1);
+  gridHelper.position.y = -0.5;
+  scene.add(gridHelper);
+
+  // 空間斜直線 L：A(-2.4, 0.2, 1.2) 沿單位方向 v = (0.8, 0.36, -0.48)（長度為1，方便計算 t）
+  const A = new THREE.Vector3(-2.4, 0.2, 1.2);
+  const vDir = new THREE.Vector3(0.8, 0.36, -0.48).normalize();
+  const vVec = vDir.clone().multiplyScalar(3.0); // 方向向量顯示長度 3
+  // 精確構造垂足 H（t = 1.0 時），再沿垂直於 vDir 的方向推 3.0 單位得到 P，確保 d(P, L) = 3.00 且 H 在 t = 1.00
+  const H = A.clone().addScaledVector(vVec, 1.0);
+  const perpDir = new THREE.Vector3(-0.36, 0.8, 0).normalize();
+  const P = H.clone().addScaledVector(perpDir, 3.0);
+
+  const lineStart = A.clone().addScaledVector(vVec, -0.8);
+  const lineEnd = A.clone().addScaledVector(vVec, 2.5);
   const lineMat = new THREE.LineBasicMaterial({ color: th0.boxEdge });
-  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-4.5, 0, 0), new THREE.Vector3(4.5, 0, 0)]), lineMat));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([lineStart, lineEnd]), lineMat));
 
-  const A = new THREE.Vector3(-2.0, 0, 0), H = new THREE.Vector3(1.2, 0, 0), P = new THREE.Vector3(1.2, 2.8, 0), B = new THREE.Vector3(1.0, 0, 0);
-
-  // Step 1
+  // Step 1: 定點 A、線外點 P、向量 v 與 AP
   const step1Group = new THREE.Group();
   const matA = new THREE.MeshBasicMaterial({ color: th0.secondary });
   const matP = new THREE.MeshBasicMaterial({ color: th0.primary });
-  const dotA = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), matA); dotA.position.copy(A);
-  const dotP = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), matP); dotP.position.copy(P);
-  step1Group.add(dotA); step1Group.add(dotP);
-  const arrowV = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), A, 3.0, th0.secondary, 0.35, 0.22);
+  const dotA = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), matA); dotA.position.copy(A);
+  const dotP = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), matP); dotP.position.copy(P);
+  const arrowV = new THREE.ArrowHelper(vDir, A, 3.0, th0.secondary, 0.35, 0.22);
   const arrowAP = new THREE.ArrowHelper(new THREE.Vector3().subVectors(P, A).normalize(), A, A.distanceTo(P), th0.plane, 0.35, 0.22);
-  step1Group.add(arrowV); step1Group.add(arrowAP);
+  step1Group.add(dotA, dotP, arrowV, arrowAP);
   scene.add(step1Group);
 
-  // Step 2
-  const step2Group = new THREE.Group(); step2Group.visible = false;
-  const P_shift = new THREE.Vector3().addVectors(P, new THREE.Vector3(3.0, 0, 0));
-  const paraMat = new THREE.MeshBasicMaterial({ color: th0.plane, side: THREE.DoubleSide, transparent: true, opacity: th0.planeOpacity });
-  step2Group.add(new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([A, B, P_shift, A, P_shift, P]), paraMat));
+  // Step 2: 外積平行四邊形面積（A, A+v, P+v, P）
+  const step2Group = new THREE.Group();
+  step2Group.visible = false;
+  const Av = A.clone().add(vVec);
+  const Pv = P.clone().add(vVec);
+  const paraMat = new THREE.MeshBasicMaterial({ color: th0.plane, side: THREE.DoubleSide, transparent: true, opacity: 0.25, depthWrite: false });
+  step2Group.add(new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([A, Av, Pv, A, Pv, P]), paraMat));
   scene.add(step2Group);
 
-  // Step 3
-  const step3Group = new THREE.Group(); step3Group.visible = false;
+  // Step 3: 垂足 H 與最短垂線段 PH
+  const step3Group = new THREE.Group();
+  step3Group.visible = false;
   const matH = new THREE.MeshBasicMaterial({ color: th0.highlight });
   const linePHMat = new THREE.LineBasicMaterial({ color: th0.highlight });
   step3Group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([P, H]), linePHMat));
@@ -167,26 +198,65 @@
   step3Group.add(dotH);
   scene.add(step3Group);
 
-  const sprites = [
-    makeThemeSprite('P (線外點)', 'textPrimary', new THREE.Vector3(1.2, 3.2, 0)),
-    makeThemeSprite('A (線上定點)', 'textSecondary', new THREE.Vector3(-2.0, -0.45, 0)),
-    makeThemeSprite('H (垂足)', 'textHighlight', new THREE.Vector3(1.2, -0.45, 0))
-  ];
-  sprites.forEach(sp => scene.add(sp));
+  // 線上動點 Q(t) 與連線 PQ（隨時可拉動測試）
+  const dotQ = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xec4899 }));
+  const linePQGeo = new THREE.BufferGeometry().setFromPoints([P, A]);
+  const linePQ = new THREE.Line(linePQGeo, new THREE.LineDashedMaterial({ color: 0xec4899, dashSize: 0.18, gapSize: 0.12 }));
+  scene.add(dotQ, linePQ);
+
+  const spP = makeThemeSprite('P (線外點)', 'textPrimary', P.clone().add(new THREE.Vector3(0, 0.42, 0)), [1.9, 0.45, 1]);
+  const spA = makeThemeSprite('A (定點)', 'textSecondary', A.clone().add(new THREE.Vector3(0, -0.42, 0)), [1.7, 0.45, 1]);
+  const spH = makeThemeSprite('H (垂足 t=1)', 'textHighlight', H.clone().add(new THREE.Vector3(0.2, -0.42, 0)), [2.1, 0.45, 1]);
+  const spQ = makeThemeSprite('Q(t)', 'textPrimary', A.clone().add(new THREE.Vector3(0, 0.35, 0)), [1.1, 0.4, 1]);
+  step3Group.add(spH);
+  const sprites = [spP, spA, spH, spQ];
+  scene.add(spP, spA, spQ);
+
+  function updateMovingQ(tVal) {
+    // 接近 1.00 時自動吸附，方便體驗垂足歸零瞬間
+    if (Math.abs(tVal - 1.0) < 0.04) tVal = 1.0;
+    const Q = A.clone().addScaledVector(vVec, tVal);
+    dotQ.position.copy(Q);
+    spQ.position.copy(Q).add(new THREE.Vector3(0, 0.36, 0));
+    linePQ.geometry.setFromPoints([P, Q]);
+    linePQ.computeLineDistances();
+
+    const distPQ = P.distanceTo(Q);
+    const vecPQ = new THREE.Vector3().subVectors(Q, P);
+    const dotVal = vecPQ.dot(vVec);
+
+    document.getElementById('val-t').textContent = tVal === 1.0 ? 't = 1.00（已抵達垂足 H！）' : `t = ${tVal.toFixed(2)}`;
+    const dEl = document.getElementById('readout-dist');
+    const dotEl = document.getElementById('readout-dot');
+    dEl.innerHTML = `線段長 $|PQ| = ${distPQ.toFixed(2)}${tVal === 1.0 ? ' (最短)' : ''}`;
+    dotEl.innerHTML = `$\\vec{PQ}\\cdot\\vec{v} = ${Math.abs(dotVal) < 0.01 ? '0.00 (垂直!)' : dotVal.toFixed(2)}$`;
+    if (window.renderMathInElement) {
+      renderMathInElement(dEl, katexOpts);
+      renderMathInElement(dotEl, katexOpts);
+    }
+  }
+  updateMovingQ(0.4);
+  document.getElementById('slider-t').addEventListener('input', e => updateMovingQ(Number(e.target.value)));
 
   function sync3DColors() {
     const th = getVisualTheme();
     lineMat.color.setHex(th.boxEdge); matA.color.setHex(th.secondary); matP.color.setHex(th.primary);
     matH.color.setHex(th.highlight); linePHMat.color.setHex(th.highlight);
-    paraMat.color.setHex(th.plane); paraMat.opacity = th.planeOpacity;
+    paraMat.color.setHex(th.plane);
     arrowV.setColor(new THREE.Color(th.secondary)); arrowAP.setColor(new THREE.Color(th.plane));
     sprites.forEach(refreshSpriteTexture);
   }
 
   let currentStep = 1;
-  const stepNames = ["步驟 1 / 3：取線上定點 A 建構 AP 與 v", "步驟 2 / 3：外積平行四邊形面積法求 d", "步驟 3 / 3：內積為零 (PH · v = 0) 求垂足 H"];
+  const stepNames = [
+    "步驟 1 / 3：取線上定點 A 建構 AP 與 v",
+    "步驟 2 / 3：外積平行四邊形面積法求 d",
+    "步驟 3 / 3：內積為零 (PH · v = 0) 求垂足 H"
+  ];
   function syncStepUI() {
-    step1Group.visible = currentStep >= 1; step2Group.visible = currentStep >= 2; step3Group.visible = currentStep >= 3;
+    step1Group.visible = currentStep >= 1;
+    step2Group.visible = currentStep >= 2;
+    step3Group.visible = currentStep >= 3;
     document.getElementById('step-label').textContent = stepNames[currentStep - 1];
     document.getElementById('btn-prev').disabled = currentStep === 1;
     document.getElementById('btn-next').disabled = currentStep === 3;
@@ -197,10 +267,12 @@
 
   let isPlane = false;
   document.getElementById('btn-plane').onclick = () => {
-    isPlane = !isPlane; smoothMoveTo(isPlane ? camPlane : camDef);
+    isPlane = !isPlane;
+    smoothMoveTo(isPlane ? camPlane : camDef);
     if (isPlane && currentStep < 2) { currentStep = 2; syncStepUI(); }
   };
   document.getElementById('btn-reset').onclick = () => { isPlane = false; smoothMoveTo(camDef); };
+
   document.getElementById('btn-theme').onclick = (e) => {
     const isL = document.body.classList.toggle('light-theme');
     e.target.textContent = isL ? '深色模式' : '淺色模式';
@@ -209,13 +281,19 @@
 
   function animate() {
     requestAnimationFrame(animate);
-    if (targetCamPos) { camera.position.lerp(targetCamPos, 0.08); if (camera.position.distanceTo(targetCamPos) < 0.05) targetCamPos = null; }
-    controls.update(); renderer.render(scene, camera);
+    if (targetCamPos) {
+      camera.position.lerp(targetCamPos, 0.08);
+      if (camera.position.distanceTo(targetCamPos) < 0.05) targetCamPos = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
   }
   animate();
+
   window.addEventListener('resize', () => {
     if (!container.clientWidth || !container.clientHeight) return;
-    camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix();
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 </script>
