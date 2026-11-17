@@ -1,7 +1,7 @@
 {
   "unitCode": "G11-S2-CH01",
   "unitTitle": "高二下數A｜空間向量與平面幾何",
-  "subtitle": "7 大空間結構原型 ＋ 自由座標平面沙盒（零學習成本視覺化）",
+  "subtitle": "9 大空間結構原型 ＋ 自由座標平面沙盒（零學習成本視覺化）",
   "problems": [
     {
       "id": "vec-sandbox",
@@ -117,6 +117,36 @@
         "<strong>先看法向量是否平行：</strong>若任兩法向量成比例，直接判斷兩平面平行（無解）或重合（無限多解）。",
         "<strong>算行列式 $\\Delta$ 判別共面：</strong>若 $\\Delta \\neq 0$，三法向量不共面，三平面必交於唯一一點（恰一解）。",
         "<strong>$\\Delta = 0$ 時代入消去法判別：</strong>若三法向量共面且無平行面，消去一變數後看剩下兩式：若矛盾則為「三角柱兩兩相交（無解）」；若成比例則為「三平面交於一線（無限多解）」。"
+      ]
+    },
+    {
+      "id": "vec-08",
+      "num": "08",
+      "locked": true,
+      "tag": "原型八｜線面夾角與最小角",
+      "title": "直線與平面夾角公式與最小角定理",
+      "template": "templates/line-plane-angle.html",
+      "params": {},
+      "questionLatex": "<strong>考題特徵：</strong>直線與平面銳夾角（$\\sin\\theta$ 與 $\\cos\\phi$ 互餘陷阱）、斜線與平面內所有直線的最小夾角性質。",
+      "steps": [
+        "<strong>抓出方向與法向量：</strong>取直線方向向量 $\\vec{v}$ 與平面法向量 $\\vec{n}$，先用內積算出兩向量的銳夾角 $\\phi$（即 $\\cos\\phi = \\frac{|\\vec{v} \\cdot \\vec{n}|}{|\\vec{v}||\\vec{n}|}$）。",
+        "<strong>互餘轉換求線面角：</strong>因法向量 $\\vec{n}$ 垂直於平面，線面角 $\\theta$ 與 $\\phi$ 互餘（$\\theta + \\phi = 90^\\circ$），故線面角必滿足 $\\sin\\theta = \\cos\\phi$（考場最常誤寫成 $\\cos\\theta$）。",
+        "<strong>最小角定理驗證：</strong>直線 $L$ 在平面上的投影線 $L'$，與 $L$ 夾出最小銳角 $\\theta$；平面上任何其他方向與 $L$ 的夾角 $\\alpha$ 皆滿足 $\\cos\\alpha = \\cos\\theta \\cdot \\cos\\beta \\le \\cos\\theta$（即 $\\alpha \\ge \\theta$）。"
+      ]
+    },
+    {
+      "id": "vec-09",
+      "num": "09",
+      "locked": true,
+      "tag": "原型九｜點到空間直線距離",
+      "title": "點到空間直線距離：外積面積法與垂足內積法",
+      "template": "templates/point-to-line.html",
+      "params": {},
+      "questionLatex": "<strong>考題特徵：</strong>空間一點 $P$ 至直線 $L$ 的最短距離、垂足 $H$ 座標與對稱點。比較「平行四邊形面積（外積法）」與「參數式垂直內積（垂足法）」的適用時機。",
+      "steps": [
+        "<strong>方法一｜外積面積法（只求距離最快）：</strong>在直線 $L$ 上任取一點 $A$ 並抓出方向向量 $\\vec{v}$，以 $\\vec{AP}$ 與 $\\vec{v}$ 張成平行四邊形，面積除以底邊長即為高：$d(P, L) = \\frac{|\\vec{AP} \\times \\vec{v}|}{|\\vec{v}|}$。",
+        "<strong>方法二｜垂足內積法（連帶求投影點 $H$）：</strong>將直線 $L$ 寫成參數式設垂足 $H(t)$，利用 $\\vec{PH} \\perp \\vec{v}$（即 $\\vec{PH} \\cdot \\vec{v} = 0$）解出唯一 $t$ 值，代回即得垂足 $H$ 與對稱點 $P' = 2H - P$。",
+        "<strong>幾何意義對照：</strong>切換觀察 $\\triangle PAH$ 直角結構，確認 $|\\vec{AP}|\\sin\\theta$（外積高）與畢氏定理 $\\sqrt{|\\vec{AP}|^2 - |\\vec{AH}|^2}$ 結果完全一致。"
       ]
     }
   ]
