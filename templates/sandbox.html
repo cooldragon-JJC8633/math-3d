@@ -10,37 +10,52 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
-    :root { --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0b0f19; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; }
+    :root {
+      --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0b0f19;
+      --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9;
+      --text-muted: #94a3b8; --btn-bg: #1e293b; --input-bg: #131a2a;
+    }
+    body.light-theme {
+      --bg-base: #f8fafc; --bg-panel: #ffffff; --bg-card: #f1f5f9;
+      --border: #cbd5e1; --accent: #2563eb; --text-main: #0f172a;
+      --text-muted: #475569; --btn-bg: #e2e8f0; --input-bg: #ffffff;
+    }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
-    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background 0.2s, color 0.2s; }
     header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; }
-    header h1 { font-size: 14px; margin: 0; font-weight: 600; }
-    #btn-mobile-toggle { display: none; background: #1e293b; border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .header-actions { display: flex; gap: 6px; }
+    .hdr-btn { background: var(--btn-bg); border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+    #btn-mobile-toggle { display: none; }
 
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
     #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
-    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(11, 15, 25, 0.8); padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.9; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
 
-    #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    #panel { flex: 1; max-width: 450px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
     .card h2 { font-size: 12px; letter-spacing: 0.05em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 
-    .preset-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .input-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    input[type="number"], input[type="text"] {
-      background: #131a2a; border: 1px solid var(--border); color: var(--text-main);
-      padding: 6px 8px; border-radius: 5px; font-size: 13px; width: 54px; text-align: center;
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .input-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+    input[type="number"], input[type="text"], select {
+      background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main);
+      padding: 6px 8px; border-radius: 5px; font-size: 13px;
     }
-    input.name-in { width: 46px; }
-    button.ctrl { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); padding: 7px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    button.ctrl.danger { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+    input[type="number"] { width: 52px; text-align: center; }
+    input.name-in { width: 44px; text-align: center; }
+    select { min-width: 72px; }
 
-    .obj-list { display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto; margin-top: 6px; }
-    .obj-item { display: flex; justify-content: space-between; align-items: center; background: #131a2a; padding: 6px 10px; border-radius: 5px; font-size: 12.5px; border: 1px solid var(--border); }
-    .del-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 13px; }
-    .del-btn:hover { color: #f87171; }
+    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 7px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.ctrl.danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
+
+    .obj-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 6px; }
+    .obj-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 7px 10px; border-radius: 6px; font-size: 12.5px; border: 1px solid var(--border); gap: 8px; }
+    .obj-sub { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; }
+    .del-btn:hover { color: #ef4444; }
 
     @media (max-width: 768px) {
       #btn-mobile-toggle { display: inline-block; }
@@ -54,33 +69,40 @@
 <body>
 <header>
   <a href="../index.html">← 目錄</a>
-  <h1>06. 自由空間座標與平面沙盒</h1>
-  <button id="btn-mobile-toggle">隱藏面板</button>
+  <h1>自由空間座標與平面沙盒</h1>
+  <div class="header-actions">
+    <button id="btn-theme" class="hdr-btn">淺色模式</button>
+    <button id="btn-mobile-toggle" class="hdr-btn">隱藏面板</button>
+  </div>
 </header>
 
 <div id="main">
   <div id="canvas-container">
-    <div id="hint-badge">紅軸 X · 綠軸 Y · 藍軸 Z（已轉為數學右手座標系）</div>
+    <div id="hint-badge">紅軸 X · 綠軸 Y · 藍軸 Z（單指旋轉 · 雙指縮放）</div>
   </div>
   <div id="panel">
     <div class="card">
       <h2>
-        <span>一鍵帶入段考範例</span>
+        <span>視角與預設範例</span>
         <button id="btn-clear" class="ctrl danger" style="padding: 3px 8px; font-size: 11px;">清空畫布</button>
       </h2>
-      <div class="preset-row">
-        <button id="preset-1" class="ctrl">範例：平面與法向量</button>
-        <button id="preset-2" class="ctrl">範例：空間四面體頂點</button>
+      <div class="grid-2" style="margin-bottom: 6px;">
+        <button id="btn-reset-cam" class="ctrl">重設 3D 預設視角</button>
+        <button id="btn-top-cam" class="ctrl">俯視 xy 水平面</button>
+      </div>
+      <div class="grid-2">
+        <button id="preset-1" class="ctrl">範例：平面與垂線投影</button>
+        <button id="preset-2" class="ctrl">範例：空間四面體架構</button>
       </div>
     </div>
 
     <div class="card">
       <h2>1. 新增空間點 $P(x, y, z)$</h2>
       <div class="input-row">
-        <input id="pt-name" class="name-in" type="text" value="P" placeholder="名稱" />
+        <input id="pt-name" class="name-in" type="text" value="P" maxlength="4" />
         <span>(</span>
         <input id="pt-x" type="number" value="2" step="1" />
-        <input id="pt-y" type="number" value="3" step="1" />
+        <input id="pt-y" type="number" value="2" step="1" />
         <input id="pt-z" type="number" value="4" step="1" />
         <span>)</span>
         <button id="btn-add-pt" class="ctrl primary">加入點</button>
@@ -88,7 +110,21 @@
     </div>
 
     <div class="card">
-      <h2>2. 新增空間向量 $\vec{v} = (a, b, c)$</h2>
+      <h2>2. 兩點連成直線 / 線段（自動算距離）</h2>
+      <div class="input-row">
+        <select id="sel-p1"></select>
+        <span>與</span>
+        <select id="sel-p2"></select>
+        <select id="sel-line-type">
+          <option value="line">延伸直線</option>
+          <option value="seg">兩點線段</option>
+        </select>
+        <button id="btn-add-line" class="ctrl primary">連線</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. 新增空間向量 $\vec{v} = (a, b, c)$</h2>
       <div class="input-row">
         <span>$\vec{v} =$ (</span>
         <input id="vec-x" type="number" value="3" step="1" />
@@ -100,18 +136,18 @@
     </div>
 
     <div class="card">
-      <h2>3. 新增平面 $ax + by + cz = d$（含法向量）</h2>
+      <h2>4. 新增平面 $ax + by + cz = d$（含法向量）</h2>
       <div class="input-row" style="font-size: 12.5px;">
-        <input id="pl-a" type="number" value="1" step="1" style="width:44px;" /><span>$x +$</span>
-        <input id="pl-b" type="number" value="1" step="1" style="width:44px;" /><span>$y +$</span>
-        <input id="pl-c" type="number" value="1" step="1" style="width:44px;" /><span>$z =$</span>
-        <input id="pl-d" type="number" value="4" step="1" style="width:44px;" />
+        <input id="pl-a" type="number" value="1" step="1" style="width:42px;" /><span>$x +$</span>
+        <input id="pl-b" type="number" value="1" step="1" style="width:42px;" /><span>$y +$</span>
+        <input id="pl-c" type="number" value="1" step="1" style="width:42px;" /><span>$z =$</span>
+        <input id="pl-d" type="number" value="4" step="1" style="width:42px;" />
         <button id="btn-add-pl" class="ctrl primary">繪製平面</button>
       </div>
     </div>
 
     <div class="card">
-      <h2>已建立的空間物件列表</h2>
+      <h2>已建立物件與幾何資訊（<span id="obj-count">0</span>）</h2>
       <div class="obj-list" id="obj-list"></div>
     </div>
   </div>
@@ -129,11 +165,13 @@
     window.dispatchEvent(new Event('resize'));
   };
 
-  // Three.js 場景（採用高中數學標準右手座標：X朝前左、Y朝右、Z朝上）
+  // Three.js 場景（高中數學右手座標系：X朝前左、Y朝右、Z朝正上方）
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.set(11, 8, 11);
+  const camDef = new THREE.Vector3(11.5, 8.5, 11.5);
+  const camTop = new THREE.Vector3(0.01, 16, 0.01);
+  camera.position.copy(camDef);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
@@ -143,13 +181,15 @@
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  // 數學座標 (x, y, z) 轉 Three.js 世界座標 (y, z, x) 讓 Z 軸朝正上方
+  let targetCamPos = null;
+  function smoothMoveTo(posVec) { targetCamPos = posVec.clone(); }
+  controls.addEventListener('start', () => { targetCamPos = null; });
+
   function m2w(x, y, z) { return new THREE.Vector3(y, z, x); }
 
-  // 水平 xy 網格地板
-  scene.add(new THREE.GridHelper(12, 12, 0x334155, 0x1e293b));
+  const gridHelper = new THREE.GridHelper(12, 12, 0x334155, 0x1e293b);
+  scene.add(gridHelper);
 
-  // 自訂數學 XYZ 三軸箭頭與標籤
   function makeAxis(dir, color, labelTxt, labelPos) {
     scene.add(new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), 6.2, color, 0.35, 0.2));
     const c = document.createElement('canvas'); c.width = 64; c.height = 64;
@@ -158,23 +198,41 @@
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
     sp.position.copy(labelPos); sp.scale.set(0.8, 0.8, 0.8); scene.add(sp);
   }
-  makeAxis(new THREE.Vector3(0, 0, 1), '#f87171', 'X', new THREE.Vector3(0, 0.3, 6.6));
-  makeAxis(new THREE.Vector3(1, 0, 0), '#34d399', 'Y', new THREE.Vector3(6.6, 0.3, 0));
-  makeAxis(new THREE.Vector3(0, 1, 0), '#60a5fa', 'Z', new THREE.Vector3(0, 6.6, 0));
+  makeAxis(new THREE.Vector3(0, 0, 1), '#ef4444', 'X', new THREE.Vector3(0, 0.3, 6.6));
+  makeAxis(new THREE.Vector3(1, 0, 0), '#10b981', 'Y', new THREE.Vector3(6.6, 0.3, 0));
+  makeAxis(new THREE.Vector3(0, 1, 0), '#3b82f6', 'Z', new THREE.Vector3(0, 6.6, 0));
 
-  // 物件管理容器
   const userObjects = [];
-  const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+  const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
   let colorIdx = 0;
   function nextColor() { return palette[(colorIdx++) % palette.length]; }
 
+  function syncPointSelectors() {
+    const pts = userObjects.filter(o => o.type === 'point');
+    const s1 = document.getElementById('sel-p1');
+    const s2 = document.getElementById('sel-p2');
+    s1.innerHTML = ''; s2.innerHTML = '';
+    pts.forEach((p, idx) => {
+      s1.add(new Option(p.name, idx));
+      s2.add(new Option(p.name, idx));
+    });
+    if (pts.length >= 2) s2.selectedIndex = 1;
+  }
+
   function renderObjList() {
     const listEl = document.getElementById('obj-list');
+    document.getElementById('obj-count').textContent = userObjects.length;
     listEl.innerHTML = '';
     userObjects.forEach((item, idx) => {
       const row = document.createElement('div');
       row.className = 'obj-item';
-      row.innerHTML = `<span><strong style="color:${item.color};">●</strong> ${item.label}</span><button class="del-btn" data-idx="${idx}">移除</button>`;
+      row.innerHTML = `
+        <div>
+          <span><strong style="color:${item.color};">●</strong> ${item.label}</span>
+          ${item.sub ? `<span class="obj-sub">${item.sub}</span>` : ''}
+        </div>
+        <button class="del-btn" data-idx="${idx}">移除</button>
+      `;
       listEl.appendChild(row);
     });
     listEl.querySelectorAll('.del-btn').forEach(btn => {
@@ -183,8 +241,10 @@
         scene.remove(userObjects[i].group);
         userObjects.splice(i, 1);
         renderObjList();
+        syncPointSelectors();
       };
     });
+    syncPointSelectors();
   }
 
   function addPoint(name, x, y, z) {
@@ -194,20 +254,57 @@
     const dot = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), new THREE.MeshBasicMaterial({ color: col }));
     dot.position.copy(pos); g.add(dot);
 
-    // 垂直投影虛線到 xy 平面 (z=0)
     const proj = m2w(x, y, 0);
     const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, proj]), new THREE.LineDashedMaterial({ color: 0x64748b, dashSize: 0.18, gapSize: 0.12 }));
     dash.computeLineDistances(); g.add(dash);
 
-    // 文字標籤
     const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-    const ctx = c.getContext('2d'); ctx.fillStyle = '#f8fafc'; ctx.font = '600 28px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${name}(${x},${y},${z})`, 128, 32);
+    const ctx = c.getContext('2d'); ctx.fillStyle = document.body.classList.contains('light-theme') ? '#0f172a' : '#f8fafc';
+    ctx.font = '700 28px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${name}(${x},${y},${z})`, 128, 32);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
     sp.position.copy(pos).add(new THREE.Vector3(0, 0.45, 0)); sp.scale.set(2.4, 0.6, 1); g.add(sp);
 
     scene.add(g);
-    userObjects.push({ label: `點 ${name}(${x}, ${y}, ${z})`, color: col, group: g });
+    userObjects.push({ type: 'point', name, coords: [x, y, z], label: `點 ${name}(${x}, ${y}, ${z})`, sub: `至 xy 平面高度 |z| = ${Math.abs(z)}`, color: col, group: g });
+    renderObjList();
+  }
+
+  function addLineBetweenPoints() {
+    const pts = userObjects.filter(o => o.type === 'point');
+    if (pts.length < 2) return;
+    const p1 = pts[Number(document.getElementById('sel-p1').value)];
+    const p2 = pts[Number(document.getElementById('sel-p2').value)];
+    if (!p1 || !p2 || p1 === p2) return;
+
+    const lineType = document.getElementById('sel-line-type').value;
+    const [x1, y1, z1] = p1.coords;
+    const [x2, y2, z2] = p2.coords;
+    const dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
+    const dist = Math.round(Math.hypot(dx, dy, dz) * 100) / 100;
+
+    const w1 = m2w(x1, y1, z1);
+    const w2 = m2w(x2, y2, z2);
+    const col = nextColor();
+    const g = new THREE.Group();
+
+    if (lineType === 'seg') {
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([w1, w2]), new THREE.LineBasicMaterial({ color: col })));
+    } else {
+      const dir = new THREE.Vector3().subVectors(w2, w1).normalize();
+      const mid = new THREE.Vector3().addVectors(w1, w2).multiplyScalar(0.5);
+      const extA = mid.clone().addScaledVector(dir, -9);
+      const extB = mid.clone().addScaledVector(dir, 9);
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([extA, extB]), new THREE.LineBasicMaterial({ color: col })));
+    }
+    scene.add(g);
+    userObjects.push({
+      type: 'line',
+      label: `${lineType === 'seg' ? '線段' : '直線'} ${p1.name}${p2.name}`,
+      sub: `方向向量 (${dx}, ${dy}, ${dz}) · 兩點距離 = ${dist}`,
+      color: col,
+      group: g
+    });
     renderObjList();
   }
 
@@ -217,9 +314,10 @@
     const end = m2w(a, b, c);
     const len = end.length();
     if (len < 0.01) return;
+    const normVal = Math.round(Math.hypot(a, b, c) * 100) / 100;
     g.add(new THREE.ArrowHelper(end.clone().normalize(), new THREE.Vector3(0,0,0), len, col, 0.4, 0.25));
     scene.add(g);
-    userObjects.push({ label: `向量 v = (${a}, ${b}, ${c})`, color: col, group: g });
+    userObjects.push({ type: 'vector', label: `向量 v = (${a}, ${b}, ${c})`, sub: `向量長度 |v| = √(${a*a+b*b+c*c}) ≈ ${normVal}`, color: col, group: g });
     renderObjList();
   }
 
@@ -229,28 +327,25 @@
     const col = nextColor();
     const g = new THREE.Group();
 
-    // 在世界座標下的法向量 n_w = (b, c, a)，平面滿足 n_w · P_w = d
     const nW = m2w(a, b, c);
     const nUnit = nW.clone().normalize();
     const distFromOrigin = d / nW.length();
     const centerOnPlane = nUnit.clone().multiplyScalar(distFromOrigin);
 
     const planeGeo = new THREE.PlaneGeometry(8, 8);
-    const planeMat = new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.32 });
-    const mesh = new THREE.Mesh(planeGeo, planeMat);
+    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }));
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nUnit);
     mesh.position.copy(centerOnPlane);
     g.add(mesh);
 
-    // 畫出平面外框線與法向量箭頭
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(planeGeo), new THREE.LineBasicMaterial({ color: col }));
     edges.quaternion.copy(mesh.quaternion);
     edges.position.copy(centerOnPlane);
     g.add(edges);
 
-    g.add(new THREE.ArrowHelper(nUnit, centerOnPlane, 2.5, col, 0.35, 0.22));
+    g.add(new THREE.ArrowHelper(nUnit, centerOnPlane, 2.4, col, 0.35, 0.22));
     scene.add(g);
-    userObjects.push({ label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, color: col, group: g });
+    userObjects.push({ type: 'plane', label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, sub: `法向量 n = (${a}, ${b}, ${c})`, color: col, group: g });
     renderObjList();
   }
 
@@ -262,9 +357,12 @@
   }
 
   document.getElementById('btn-clear').onclick = clearAll;
+  document.getElementById('btn-reset-cam').onclick = () => smoothMoveTo(camDef);
+  document.getElementById('btn-top-cam').onclick = () => smoothMoveTo(camTop);
   document.getElementById('btn-add-pt').onclick = () => {
     addPoint(document.getElementById('pt-name').value || 'P', Number(document.getElementById('pt-x').value), Number(document.getElementById('pt-y').value), Number(document.getElementById('pt-z').value));
   };
+  document.getElementById('btn-add-line').onclick = addLineBetweenPoints;
   document.getElementById('btn-add-vec').onclick = () => {
     addVector(Number(document.getElementById('vec-x').value), Number(document.getElementById('vec-y').value), Number(document.getElementById('vec-z').value));
   };
@@ -272,15 +370,41 @@
     addPlane(Number(document.getElementById('pl-a').value), Number(document.getElementById('pl-b').value), Number(document.getElementById('pl-c').value), Number(document.getElementById('pl-d').value));
   };
 
-  // 預設範例按鈕
-  document.getElementById('preset-1').onclick = () => { clearAll(); addPlane(1, 1, 1, 4); addPoint('P', 3, 3, 4); };
-  document.getElementById('preset-2').onclick = () => { clearAll(); addPoint('A', 0, 0, 4); addPoint('B', 3, 0, 0); addPoint('C', 0, 3, 0); addVector(3, 0, -4); };
+  document.getElementById('preset-1').onclick = () => {
+    clearAll();
+    addPlane(1, 1, 1, 4);
+    addPoint('P', 3, 3, 4);
+    addPoint('H', 1, 1, 2);
+    document.getElementById('sel-line-type').value = 'seg';
+    addLineBetweenPoints();
+  };
+  document.getElementById('preset-2').onclick = () => {
+    clearAll();
+    addPoint('A', 0, 0, 4);
+    addPoint('B', 3, 0, 0);
+    addPoint('C', 0, 3, 0);
+    document.getElementById('sel-line-type').value = 'seg';
+    addLineBetweenPoints();
+  };
 
-  // 預設載入一組畫面避免全空
-  addPlane(1, 1, 1, 4);
-  addPoint('P', 3, 3, 4);
+  document.getElementById('btn-theme').onclick = (e) => {
+    const isL = document.body.classList.toggle('light-theme');
+    e.target.textContent = isL ? '深色模式' : '淺色模式';
+  };
 
-  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  // 預設載入一組完整的點到平面垂足連線示範
+  document.getElementById('preset-1').click();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (targetCamPos) {
+      camera.position.lerp(targetCamPos, 0.08);
+      controls.target.lerp(new THREE.Vector3(0, 0, 0), 0.08);
+      if (camera.position.distanceTo(targetCamPos) < 0.05) targetCamPos = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  }
   animate();
   window.addEventListener('resize', () => {
     if (!container.clientWidth || !container.clientHeight) return;
