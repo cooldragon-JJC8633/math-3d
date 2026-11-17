@@ -1,7 +1,7 @@
 {
   "unitCode": "G11-S2-CH01",
   "unitTitle": "高二下數A｜空間向量與平面幾何",
-  "subtitle": "5 大空間結構原型 ＋ 自由座標平面沙盒（零學習成本視覺化）",
+  "subtitle": "7 大空間結構原型 ＋ 自由座標平面沙盒（零學習成本視覺化）",
   "problems": [
     {
       "id": "vec-sandbox",
@@ -72,6 +72,51 @@
         "<strong>四邊形內角和 $360^\\circ$ 原理：</strong>從交線 $L$ 側視過去，兩平面與兩法向量構成四邊形，其中兩處為 $90^\\circ$，故二面角 $\\theta$ 與法向量夾角 $\\phi$ 之和必為 $180^\\circ$（兩法向量同時朝外時互補）。",
         "<strong>方向反轉判斷：</strong>若將其中一法向量反轉（變成一進一出），夾角即變成 $180^\\circ - \\phi = \\theta$。",
         "<strong>考場口訣：</strong>先用內積算 $\\cos\\phi = \\frac{\\vec{n}_1 \\cdot \\vec{n}_2}{|\\vec{n}_1||\\vec{n}_2|}$，再依題目指定「銳二面角（取正）」或「鈍二面角（取負）」決定正負號，切勿盲目代公式。"
+      ]
+    },
+    {
+      "id": "vec-05",
+      "num": "05",
+      "locked": true,
+      "tag": "原型五｜投影與對稱點",
+      "title": "空間點至平面之投影點 H 與對稱點 P'",
+      "template": "templates/projection.html",
+      "params": {},
+      "questionLatex": "<strong>考題特徵：</strong>點在平面上的投影點、對稱點、光線反射最短路徑。已知空間一點 $P(x_0, y_0, z_0)$ 與平面 $E: ax+by+cz=d$，如何不用死背公式直接寫出 $H$ 與 $P'$？",
+      "steps": [
+        "<strong>寫出垂線參數式：</strong>過 $P$ 且垂直平面 $E$ 的直線，其方向向量即為法向量 $\\vec{n}=(a,b,c)$，故垂足可設為 $H(x_0+at,\\; y_0+bt,\\; z_0+ct)$。",
+        "<strong>代入平面解參數 $t$：</strong>因 $H \\in E$，代入方程式解得 $t = -\\frac{ax_0+by_0+cz_0-d}{a^2+b^2+c^2}$，代回即得投影點 $H$。",
+        "<strong>中點公式倍增求對稱：</strong>投影點 $H$ 必為 $PP'$ 中點（$H = \\frac{P + P'}{2}$），直接心算 $P' = 2H - P$（或直接將 $t$ 乘以 $2$ 代入參數式）。"
+      ]
+    },
+    {
+      "id": "vec-06",
+      "num": "06",
+      "locked": true,
+      "tag": "原型六｜兩歪斜線距離",
+      "title": "兩歪斜線之公垂線與平行平面降維法",
+      "template": "templates/skew-lines.html",
+      "params": {},
+      "questionLatex": "<strong>考題特徵：</strong>兩歪斜線最短距離、公垂線段長。給定兩歪斜線 $L_1, L_2$ 之參數式，如何利用外積建構包含 $L_2$ 且平行 $L_1$ 的輔助平面？",
+      "steps": [
+        "<strong>外積求公垂方向：</strong>抓出兩線方向向量 $\\vec{v}_1, \\vec{v}_2$，外積 $\\vec{n} = \\vec{v}_1 \\times \\vec{v}_2$ 同時垂直兩線，即為公垂線方向。",
+        "<strong>建構包含平行平面：</strong>利用 $\\vec{n}$ 為法向量，代 $L_2$ 上一點做出平面 $E$，此時 $L_1$ 必平行於平面 $E$。",
+        "<strong>轉化為點到平面距離：</strong>在 $L_1$ 上任取一點 $P$，計算 $P$ 到平面 $E$ 的垂直距離，即為兩歪斜線最短距離。"
+      ]
+    },
+    {
+      "id": "vec-07",
+      "num": "07",
+      "locked": true,
+      "tag": "原型七｜三平面相交",
+      "title": "三元一次方程組與空間三平面相交形態",
+      "template": "templates/three-planes.html",
+      "params": {},
+      "questionLatex": "<strong>考題特徵：</strong>三平面相交幾何意義、$\\Delta = 0$ 時「交於一線」與「三角柱無解」的判別。切換觀察 4 種經典相交結構。",
+      "steps": [
+        "<strong>先看法向量是否平行：</strong>若任兩法向量成比例，直接判斷兩平面平行（無解）或重合（無限多解）。",
+        "<strong>算行列式 $\\Delta$ 判別共面：</strong>若 $\\Delta \\neq 0$，三法向量不共面，三平面必交於唯一一點（恰一解）。",
+        "<strong>$\\Delta = 0$ 時代入消去法判別：</strong>若三法向量共面且無平行面，消去一變數後看剩下兩式：若矛盾則為「三角柱兩兩相交（無解）」；若成比例則為「三平面交於一線（無限多解）」。"
       ]
     }
   ]
