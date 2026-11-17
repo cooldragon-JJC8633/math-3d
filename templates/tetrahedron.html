@@ -116,6 +116,7 @@
 
   fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
     const prob = data.problems.find(p => p.id === probId) || data.problems[2];
+    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
     document.getElementById('header-title').textContent = `${prob.num || '03'}. ${prob.title}`;
     document.getElementById('q-text').innerHTML = prob.questionLatex;
     const initA = (prob.params && prob.params.edge) ? prob.params.edge : 6;
