@@ -1,28 +1,28 @@
 {
   "unitCode": "G11-S2-CH01",
-  "unitTitle": "高二下數A｜空間向量與平面幾何",
-  "subtitle": "9 大空間結構原型 ＋ 自由座標平面沙盒（零學習成本視覺化）",
+  "unitTitle": "高二下數A｜空間向量與平面直線",
+  "subtitle": "108 課綱核心空間幾何題型與自訂座標沙盒",
   "problems": [
     {
       "id": "vec-sandbox",
       "num": "TOOL",
       "locked": false,
-      "tag": "自由互動工具",
+      "tag": "自由繪圖工具",
       "title": "自由空間座標與平面沙盒（自訂題目數字）",
       "template": "templates/sandbox.html",
       "params": {},
-      "questionLatex": "<strong>適用情境：</strong>段考題給定具體點座標 $(x,y,z)$、空間向量或平面方程式 $ax+by+cz=d$ 時，直接輸入數字即可即時繪出立體相對位置與法向量。",
+      "questionLatex": "段考題給定具體點座標 $(x,y,z)$、空間向量或平面方程式 $ax+by+cz=d$ 時，直接輸入數字即可繪出立體相對位置與法向量。",
       "steps": []
     },
     {
       "id": "vec-01",
       "num": "01",
       "locked": false,
-      "tag": "原型一｜正立方體截面",
+      "tag": "立體幾何｜正立方體截面",
       "title": "截面 △BDE 與體對角線 AG 之垂直關係",
       "template": "templates/cube-section.html",
       "params": { "side": 6 },
-      "questionLatex": "<strong>考題特徵：</strong>正立方體、體對角線垂直切面、頂點到斜面距離。設邊長為 $a$，求頂點 $A$ 至截面 $\\triangle BDE$ 的距離並驗證 $1:2$ 比例。",
+      "questionLatex": "設正立方體邊長為 $a$，求頂點 $A$ 至截面 $\\triangle BDE$ 的距離，並驗證體對角線 $AG$ 被切為 $1:2$ 比例。",
       "steps": [
         "<strong>對稱性判斷：</strong>$A$ 至 $B, D, E$ 皆為邊長 $a$；$G$ 至 $B, D, E$ 皆為面對角線 $\\sqrt{2}a$。兩等腰三角錐共底面，故連線 $AG$ 必垂直平分通過截面重心。",
         "<strong>體積法求高：</strong>角錐 $A-BDE$ 體積 $= \\frac{1}{6}a^3 = \\frac{1}{3} \\cdot \\left(\\frac{\\sqrt{3}}{4}a^2\\right) \\cdot h$。",
@@ -33,11 +33,11 @@
       "id": "vec-02",
       "num": "02",
       "locked": false,
-      "tag": "原型二｜三垂線定理",
+      "tag": "立體幾何｜三垂線定理",
       "title": "空間直線與平面之三垂線構造",
       "template": "templates/three-perp.html",
       "params": { "heightPA": 4, "distAB": 3, "distBC": 12 },
-      "questionLatex": "<strong>考題特徵：</strong>一直線垂直地板平面、地板上另有一線、求斜線段長。已知 $PA \\perp E$、$AB \\perp L$，若 $PA = 4,\\; AB = 3,\\; BC = 12$，求 $PC$。",
+      "questionLatex": "已知 $PA \\perp E$（垂直地板）、$AB \\perp L$（地板上垂線），若 $PA = 4,\\; AB = 3,\\; BC = 12$，求斜線段 $PC$。",
       "steps": [
         "<strong>兩垂直推第三垂直：</strong>已知 $PA \\perp E$（第一垂）且 $AB \\perp L$（第二垂），由三垂線定理得斜線 $PB \\perp L$（第三垂）。",
         "<strong>降維拆解直角三角形：</strong>在鉛直面 $\\triangle PAB$ 中，斜高 $PB = \\sqrt{PA^2 + AB^2} = \\sqrt{4^2 + 3^2} = 5$。",
@@ -48,59 +48,59 @@
       "id": "vec-03",
       "num": "03",
       "locked": true,
-      "tag": "原型三｜正四面體幾何",
+      "tag": "立體幾何｜正四面體",
       "title": "正四面體之正高、兩面角與歪斜線公垂距",
       "template": "templates/tetrahedron.html",
       "params": { "edge": 6 },
-      "questionLatex": "<strong>考題特徵：</strong>正四面體、對稜歪斜線距離、相鄰兩側面夾角。設稜長為 $a$，求正高 $AH$、兩面角餘弦值與對稜公垂距。",
+      "questionLatex": "設正四面體稜長為 $a$，求正高 $AH$、相鄰兩側面兩面角餘弦值 $\\cos\\theta$，以及對稜歪斜線公垂距 $MN$。",
       "steps": [
-        "<strong>重心投影求正高：</strong>$A$ 至 $B, C, D$ 等距，故垂足 $H$ 為正 $\\triangle BCD$ 外心（即重心），$BH = \\frac{\\sqrt{3}}{3}a$，由畢氏定理得 $AH = \\sqrt{a^2 - (\\frac{\\sqrt{3}}{3}a)^2} = \\frac{\\sqrt{6}}{3}a$。",
+        "<strong>重心投影求正高：</strong>$A$ 至 $B, C, D$ 等距，故垂足 $H$ 為正 $\\triangle BCD$ 重心，$BH = \\frac{\\sqrt{3}}{3}a$，得 $AH = \\sqrt{a^2 - (\\frac{\\sqrt{3}}{3}a)^2} = \\frac{\\sqrt{6}}{3}a$。",
         "<strong>取交稜中點看兩面角：</strong>取 $CD$ 中點 $N$，則 $AN \\perp CD$ 且 $BN \\perp CD$，兩面角即為 $\\angle ANB$。在直角 $\\triangle AHN$ 中，$\\cos\\theta = \\frac{HN}{AN} = \\frac{1}{3}$。",
-        "<strong>對稱性求歪斜線距離：</strong>取 $AB$ 中點 $M$，等腰 $\\triangle MCD$ 中線 $MN \\perp AB$，同理 $MN \\perp CD$，故 $MN = \\sqrt{(\\frac{\\sqrt{3}}{2}a)^2 - (\\frac{a}{2})^2} = \\frac{\\sqrt{2}}{2}a$。"
+        "<strong>對稱性求歪斜線距離：</strong>取 $AB$ 中點 $M$，等腰 $\\triangle MCD$ 中線 $MN \\perp AB$ 且 $MN \\perp CD$，得 $MN = \\sqrt{(\\frac{\\sqrt{3}}{2}a)^2 - (\\frac{a}{2})^2} = \\frac{\\sqrt{2}}{2}a$。"
       ]
     },
     {
       "id": "vec-04",
       "num": "04",
       "locked": true,
-      "tag": "原型四｜二面角與法向量",
-      "title": "兩平面夾角與法向量方向之互補判別",
+      "tag": "空間平面｜二面角與角平分面",
+      "title": "兩平面二面角（銳/鈍角）與角平分面方程式",
       "template": "templates/dihedral-angle.html",
       "params": { "angle": 60 },
-      "questionLatex": "<strong>考題特徵：</strong>兩平面夾角、銳二面角與鈍二面角正負號陷阱。觀察法向量 $\\vec{n}_1, \\vec{n}_2$ 朝向如何決定夾角與二面角相等或互補。",
+      "questionLatex": "給定兩相交平面 $E_1, E_2$，判別法向量朝向與銳／鈍二面角正負號，並求兩片互相垂直的角平分面方程式。",
       "steps": [
-        "<strong>四邊形內角和 $360^\\circ$ 原理：</strong>從交線 $L$ 側視過去，兩平面與兩法向量構成四邊形，其中兩處為 $90^\\circ$，故二面角 $\\theta$ 與法向量夾角 $\\phi$ 之和必為 $180^\\circ$（兩法向量同時朝外時互補）。",
-        "<strong>方向反轉判斷：</strong>若將其中一法向量反轉（變成一進一出），夾角即變成 $180^\\circ - \\phi = \\theta$。",
-        "<strong>考場口訣：</strong>先用內積算 $\\cos\\phi = \\frac{\\vec{n}_1 \\cdot \\vec{n}_2}{|\\vec{n}_1||\\vec{n}_2|}$，再依題目指定「銳二面角（取正）」或「鈍二面角（取負）」決定正負號，切勿盲目代公式。"
+        "<strong>法向量夾角與二面角判別：</strong>先算 $\\cos\\phi = \\frac{\\vec{n}_1 \\cdot \\vec{n}_2}{|\\vec{n}_1||\\vec{n}_2|}$。題目求「銳二面角」取正值 $|\\cos\\phi|$；求「鈍二面角」取負值 $-|\\cos\\phi|$。",
+        "<strong>兩片角平分面必互相垂直：</strong>單位法向量 $\\hat{n}_1 + \\hat{n}_2$ 與 $\\hat{n}_1 - \\hat{n}_2$ 內積恆為 $0$，故拆絕對值取「$+$」或「$-$」所得兩角平分面夾角必為 $90^\\circ$。",
+        "<strong>銳／鈍角平分面口訣：</strong>當 $\\vec{n}_1 \\cdot \\vec{n}_2 > 0$ 時，法向量相加（取「$+$」）為鈍角平分面，取「$-$」為銳角平分面；實戰可直接代一已知點檢驗。"
       ]
     },
     {
       "id": "vec-05",
       "num": "05",
       "locked": true,
-      "tag": "原型五｜投影與對稱點",
+      "tag": "空間平面｜投影與對稱點",
       "title": "空間點至平面之投影點 H 與對稱點 P'",
       "template": "templates/projection.html",
       "params": {},
-      "questionLatex": "<strong>考題特徵：</strong>點在平面上的投影點、對稱點、光線反射最短路徑。已知空間一點 $P(x_0, y_0, z_0)$ 與平面 $E: ax+by+cz=d$，如何不用死背公式直接寫出 $H$ 與 $P'$？",
+      "questionLatex": "已知空間一點 $P(x_0, y_0, z_0)$ 與平面 $E: ax+by+cz=d$，利用參數式與中點公式直接求投影點 $H$ 與對稱點 $P'$。",
       "steps": [
-        "<strong>寫出垂線參數式：</strong>過 $P$ 且垂直平面 $E$ 的直線，其方向向量即為法向量 $\\vec{n}=(a,b,c)$，故垂足可設為 $H(x_0+at,\\; y_0+bt,\\; z_0+ct)$。",
+        "<strong>寫出垂線參數式：</strong>過 $P$ 且垂直平面 $E$ 的直線，方向向量即為法向量 $\\vec{n}=(a,b,c)$，設垂足 $H(x_0+at,\\; y_0+bt,\\; z_0+ct)$。",
         "<strong>代入平面解參數 $t$：</strong>因 $H \\in E$，代入方程式解得 $t = -\\frac{ax_0+by_0+cz_0-d}{a^2+b^2+c^2}$，代回即得投影點 $H$。",
-        "<strong>中點公式倍增求對稱：</strong>投影點 $H$ 必為 $PP'$ 中點（$H = \\frac{P + P'}{2}$），直接心算 $P' = 2H - P$（或直接將 $t$ 乘以 $2$ 代入參數式）。"
+        "<strong>中點公式倍增求對稱：</strong>投影點 $H$ 為 $PP'$ 中點，直接心算 $P' = 2H - P$（或直接將 $t$ 乘以 $2$ 代入參數式）。"
       ]
     },
     {
       "id": "vec-06",
       "num": "06",
       "locked": true,
-      "tag": "原型六｜兩歪斜線距離",
+      "tag": "空間直線｜兩歪斜線距離",
       "title": "兩歪斜線之公垂線與平行平面降維法",
       "template": "templates/skew-lines.html",
       "params": {},
-      "questionLatex": "<strong>考題特徵：</strong>兩歪斜線最短距離、公垂線段長。給定兩歪斜線 $L_1, L_2$ 之參數式，如何利用外積建構包含 $L_2$ 且平行 $L_1$ 的輔助平面？",
+      "questionLatex": "給定兩歪斜線 $L_1, L_2$ 之參數式，利用外積建構包含 $L_2$ 且平行 $L_1$ 的輔助平面 $E$，求兩線公垂距與公垂足。",
       "steps": [
         "<strong>外積求公垂方向：</strong>抓出兩線方向向量 $\\vec{v}_1, \\vec{v}_2$，外積 $\\vec{n} = \\vec{v}_1 \\times \\vec{v}_2$ 同時垂直兩線，即為公垂線方向。",
-        "<strong>建構包含平行平面：</strong>利用 $\\vec{n}$ 為法向量，代 $L_2$ 上一點做出平面 $E$，此時 $L_1$ 必平行於平面 $E$。",
+        "<strong>建構包含平行平面：</strong>利用 $\\vec{n}$ 為法向量，過 $L_2$ 上一點做出平面 $E$，此時上方直線 $L_1$ 必平行於平面 $E$。",
         "<strong>轉化為點到平面距離：</strong>在 $L_1$ 上任取一點 $P$，計算 $P$ 到平面 $E$ 的垂直距離，即為兩歪斜線最短距離。"
       ]
     },
@@ -108,45 +108,30 @@
       "id": "vec-07",
       "num": "07",
       "locked": true,
-      "tag": "原型七｜三平面相交",
-      "title": "三元一次方程組與空間三平面相交形態",
+      "tag": "空間平面｜三平面相交",
+      "title": "三元一次方程組與三平面相交（完整 8 種形態）",
       "template": "templates/three-planes.html",
       "params": {},
-      "questionLatex": "<strong>考題特徵：</strong>三平面相交幾何意義、$\\Delta = 0$ 時「交於一線」與「三角柱無解」的判別。切換觀察 4 種經典相交結構。",
+      "questionLatex": "切換觀察空間三平面全部 8 種相對位置（恰一解、交於一線、三角柱、平行與重合），對照係數比與行列式 $\\Delta$ 判別法。",
       "steps": [
-        "<strong>先看法向量是否平行：</strong>若任兩法向量成比例，直接判斷兩平面平行（無解）或重合（無限多解）。",
-        "<strong>算行列式 $\\Delta$ 判別共面：</strong>若 $\\Delta \\neq 0$，三法向量不共面，三平面必交於唯一一點（恰一解）。",
-        "<strong>$\\Delta = 0$ 時代入消去法判別：</strong>若三法向量共面且無平行面，消去一變數後看剩下兩式：若矛盾則為「三角柱兩兩相交（無解）」；若成比例則為「三平面交於一線（無限多解）」。"
+        "<strong>先看法向量是否成比例：</strong>肉眼檢查係數比 $a_1:b_1:c_1$，有成比例者直接用常數項 $d$ 區分「重合」或「平行無解」。",
+        "<strong>無平行面時算行列式 $\\Delta$：</strong>若 $\\Delta \\neq 0$，三法向量不共面，三平面必交於唯一一點（恰一解）。",
+        "<strong>$\\Delta = 0$ 且無平行面時用消去法：</strong>消去一變數後看剩下兩式：成比例即為「交於一線（無限多解）」；矛盾則為「三角柱（無解）」。"
       ]
     },
     {
       "id": "vec-08",
       "num": "08",
       "locked": true,
-      "tag": "原型八｜線面夾角與最小角",
-      "title": "直線與平面夾角公式與最小角定理",
-      "template": "templates/line-plane-angle.html",
-      "params": {},
-      "questionLatex": "<strong>考題特徵：</strong>直線與平面銳夾角（$\\sin\\theta$ 與 $\\cos\\phi$ 互餘陷阱）、斜線與平面內所有直線的最小夾角性質。",
-      "steps": [
-        "<strong>抓出方向與法向量：</strong>取直線方向向量 $\\vec{v}$ 與平面法向量 $\\vec{n}$，先用內積算出兩向量的銳夾角 $\\phi$（即 $\\cos\\phi = \\frac{|\\vec{v} \\cdot \\vec{n}|}{|\\vec{v}||\\vec{n}|}$）。",
-        "<strong>互餘轉換求線面角：</strong>因法向量 $\\vec{n}$ 垂直於平面，線面角 $\\theta$ 與 $\\phi$ 互餘（$\\theta + \\phi = 90^\\circ$），故線面角必滿足 $\\sin\\theta = \\cos\\phi$（考場最常誤寫成 $\\cos\\theta$）。",
-        "<strong>最小角定理驗證：</strong>直線 $L$ 在平面上的投影線 $L'$，與 $L$ 夾出最小銳角 $\\theta$；平面上任何其他方向與 $L$ 的夾角 $\\alpha$ 皆滿足 $\\cos\\alpha = \\cos\\theta \\cdot \\cos\\beta \\le \\cos\\theta$（即 $\\alpha \\ge \\theta$）。"
-      ]
-    },
-    {
-      "id": "vec-09",
-      "num": "09",
-      "locked": true,
-      "tag": "原型九｜點到空間直線距離",
+      "tag": "空間直線｜點到直線距離",
       "title": "點到空間直線距離：外積面積法與垂足內積法",
       "template": "templates/point-to-line.html",
       "params": {},
-      "questionLatex": "<strong>考題特徵：</strong>空間一點 $P$ 至直線 $L$ 的最短距離、垂足 $H$ 座標與對稱點。比較「平行四邊形面積（外積法）」與「參數式垂直內積（垂足法）」的適用時機。",
+      "questionLatex": "已知空間一點 $P$ 與直線 $L$，比較「外積平行四邊形面積法（只求距離）」與「參數式垂足內積法（求垂足 $H$ 與對稱點）」。",
       "steps": [
-        "<strong>方法一｜外積面積法（只求距離最快）：</strong>在直線 $L$ 上任取一點 $A$ 並抓出方向向量 $\\vec{v}$，以 $\\vec{AP}$ 與 $\\vec{v}$ 張成平行四邊形，面積除以底邊長即為高：$d(P, L) = \\frac{|\\vec{AP} \\times \\vec{v}|}{|\\vec{v}|}$。",
-        "<strong>方法二｜垂足內積法（連帶求投影點 $H$）：</strong>將直線 $L$ 寫成參數式設垂足 $H(t)$，利用 $\\vec{PH} \\perp \\vec{v}$（即 $\\vec{PH} \\cdot \\vec{v} = 0$）解出唯一 $t$ 值，代回即得垂足 $H$ 與對稱點 $P' = 2H - P$。",
-        "<strong>幾何意義對照：</strong>切換觀察 $\\triangle PAH$ 直角結構，確認 $|\\vec{AP}|\\sin\\theta$（外積高）與畢氏定理 $\\sqrt{|\\vec{AP}|^2 - |\\vec{AH}|^2}$ 結果完全一致。"
+        "<strong>建立斜邊與方向向量：</strong>在直線 $L$ 上任取一點 $A$ 並抓出方向向量 $\\vec{v}$，連接 $\\vec{AP}$。",
+        "<strong>方法一｜外積平行四邊形面積法：</strong>以 $\\vec{AP}$ 與 $\\vec{v}$ 張成平行四邊形，面積除以底邊長即為高：$d(P, L) = \\frac{|\\vec{AP} \\times \\vec{v}|}{|\\vec{v}|}$。",
+        "<strong>方法二｜垂足內積法：</strong>設垂足 $H(t) = A + t\\vec{v}$，利用 $\\vec{PH} \\cdot \\vec{v} = 0$ 解出唯一 $t$ 值，代回即得垂足 $H$ 與對稱點 $P' = 2H - P$。"
       ]
     }
   ]
