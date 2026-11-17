@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 互動圖解｜正立方體截面</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+    body { margin: 0; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600; }
+    header h1 { font-size: 15px; margin: 0; color: #f8fafc; }
+    #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
+    #canvas-container { flex: 1.4; position: relative; cursor: grab; }
+    #hint-badge { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.8); padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #cbd5e1; pointer-events: none; border: 1px solid #334155; }
+    #panel { flex: 1; max-width: 420px; background: #1e293b; border-left: 1px solid #334155; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px 0; color: #facc15; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #e2e8f0; margin: 4px 0; }
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button { background: #2563eb; color: white; border: none; padding: 10px 8px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    button.secondary { background: #334155; color: #e2e8f0; }
+    .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 8px; }
+    @media (max-width: 768px) {
+      #main { flex-direction: column; }
+      #canvas-container { flex: 1.1; }
+      #panel { max-width: 100%; flex: 1; border-left: none; border-top: 1px solid #334155; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 返回題目列表</a>
+  <h1 id="header-title">正立方體截面</h1>
+  <span>3D 互動</span>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="hint-badge">👆 拖曳旋轉｜滾輪/雙指縮放</div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <h2>📝 題目（引數即時連動）</h2>
+      <p id="q-text"></p>
+      <div class="slider-row">
+        <span>調整邊長 $a =$ <strong id="val-side">6</strong> $\Rightarrow$ 距離 $= \frac{\sqrt{3}}{3}a =$ <strong id="ans-dist" style="color:#38bdf8;">2√3</strong></span>
+        <input type="range" id="slider-side" min="3" max="15" step="3" value="6" />
+      </div>
+    </div>
+    <div class="card">
+      <h2>🎮 互動視角與輔助線</h2>
+      <div class="btn-group">
+        <button id="btn-perp">✨ 切換「正交垂直」視角</button>
+        <button id="btn-reset" class="secondary">🔄 恢復預設 3D 視角</button>
+        <button id="btn-toggle-diag" class="secondary">📏 顯示/隱藏對角線 AG</button>
+        <button id="btn-toggle-tri" class="secondary">🔺 顯示/隱藏等腰稜邊</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>💡 家教人話版：3 步看穿這題</h2>
+      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const probId = urlParams.get('id') || 'vec-01';
+
+  fetch('../data/space-vector.json').then(r => r.json()).then(data => {
+    const prob = data.problems.find(p => p.id === probId) || data.problems[0];
+    document.getElementById('header-title').textContent = prob.title;
+    document.getElementById('q-text').innerHTML = prob.questionLatex;
+    const initSide = prob.params.side || 6;
+    document.getElementById('slider-side').value = initSide;
+    updateSideUI(initSide);
+
+    const ol = document.getElementById('steps-list');
+    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+    renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+  });
+
+  function updateSideUI(a) {
+    document.getElementById('val-side').textContent = a;
+    document.getElementById('ans-dist').textContent = `${a / 3}√3`;
+  }
+  document.getElementById('slider-side').addEventListener('input', e => updateSideUI(Number(e.target.value)));
+
+  // Three.js 3D 渲染
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  const camDef = [10, 8, 11], camPerp = [11, -5.5, 0];
+  camera.position.set(...camDef);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+
+  const s = 3;
+  const pts = {
+    A: new THREE.Vector3(-s, s, s), B: new THREE.Vector3(s, s, s), C: new THREE.Vector3(s, s, -s), D: new THREE.Vector3(-s, s, -s),
+    E: new THREE.Vector3(-s, -s, s), F: new THREE.Vector3(s, -s, s), G: new THREE.Vector3(s, -s, -s), H: new THREE.Vector3(-s, -s, -s)
+  };
+
+  scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(s*2, s*2, s*2)), new THREE.LineBasicMaterial({ color: 0x64748b })));
+  const triGeo = new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E]);
+  scene.add(new THREE.Mesh(triGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.45 })));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E, pts.B]), new THREE.LineBasicMaterial({ color: 0x7dd3fc })));
+
+  const diagLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.A, pts.G]), new THREE.LineBasicMaterial({ color: 0xf97316 }));
+  scene.add(diagLine);
+
+  const centerP = new THREE.Vector3().add(pts.B).add(pts.D).add(pts.E).divideScalar(3);
+  const dotP = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  dotP.position.copy(centerP);
+  scene.add(dotP);
+
+  const helperGroup = new THREE.Group();
+  const dashMat = new THREE.LineDashedMaterial({ color: 0xfacc15, dashSize: 0.25, gapSize: 0.15 });
+  [pts.B, pts.D, pts.E].forEach(t => {
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.A, t]), dashMat);
+    l.computeLineDistances(); helperGroup.add(l);
+  });
+  scene.add(helperGroup);
+
+  Object.entries(pts).forEach(([k, v]) => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d'); ctx.fillStyle = ['A','B','D','E','G'].includes(k) ? '#facc15' : '#94a3b8';
+    ctx.font = 'bold 64px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(k, 64, 64);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) }));
+    sp.position.copy(v).multiplyScalar(1.14); sp.scale.set(1.2, 1.2, 1.2); scene.add(sp);
+  });
+
+  let isPerp = false;
+  document.getElementById('btn-perp').onclick = () => { isPerp = !isPerp; camera.position.set(...(isPerp ? camPerp : camDef)); controls.target.set(0,0,0); };
+  document.getElementById('btn-reset').onclick = () => { isPerp = false; camera.position.set(...camDef); controls.target.set(0,0,0); };
+  document.getElementById('btn-toggle-diag').onclick = () => { diagLine.visible = !diagLine.visible; dotP.visible = diagLine.visible; };
+  document.getElementById('btn-toggle-tri').onclick = () => { helperGroup.visible = !helperGroup.visible; };
+
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => { camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+</script>
+</body>
+</html>
