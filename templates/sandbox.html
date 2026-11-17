@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     :root {
-      --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0b0f19;
+      --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0f1623;
       --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9;
       --text-muted: #94a3b8; --btn-bg: #1e293b; --input-bg: #131a2a;
     }
@@ -21,7 +21,7 @@
       --text-muted: #475569; --btn-bg: #e2e8f0; --input-bg: #ffffff;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
-    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background 0.2s, color 0.2s; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
     header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -31,13 +31,27 @@
 
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
     #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
-    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.9; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.92; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
 
-    #panel { flex: 1; max-width: 450px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+
+    /* 頂部視角快捷列 + 分頁標籤列 */
+    .panel-top { padding: 12px 14px 0 14px; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
+    .cam-bar { display: flex; gap: 6px; margin-bottom: 10px; }
+    .cam-bar button { flex: 1; }
+    .tabs { display: flex; gap: 4px; }
+    .tab-btn {
+      flex: 1; padding: 9px 8px; border: none; background: transparent; color: var(--text-muted);
+      font-size: 13px; font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-content { flex: 1; overflow-y: auto; padding: 14px; display: none; flex-direction: column; gap: 10px; }
+    .tab-content.active { display: flex; }
+
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-    .card h2 { font-size: 12px; letter-spacing: 0.05em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+    .card h2 { font-size: 12px; letter-spacing: 0.04em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .input-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 13px; }
     input[type="number"], input[type="text"], select {
       background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main);
@@ -51,11 +65,12 @@
     button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
     button.ctrl.danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
 
-    .obj-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; margin-top: 6px; }
-    .obj-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 7px 10px; border-radius: 6px; font-size: 12.5px; border: 1px solid var(--border); gap: 8px; }
-    .obj-sub { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-    .del-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 2px 6px; }
-    .del-btn:hover { color: #ef4444; }
+    /* 清爽分頁版物件清單 */
+    .obj-list { display: flex; flex-direction: column; gap: 8px; }
+    .obj-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); gap: 8px; }
+    .obj-sub { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .del-btn { background: var(--btn-bg); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; font-size: 11.5px; padding: 4px 8px; border-radius: 4px; }
+    .del-btn:hover { color: #ef4444; border-color: #ef4444; }
 
     @media (max-width: 768px) {
       #btn-mobile-toggle { display: inline-block; }
@@ -80,74 +95,76 @@
   <div id="canvas-container">
     <div id="hint-badge">紅軸 X · 綠軸 Y · 藍軸 Z（單指旋轉 · 雙指縮放）</div>
   </div>
+
   <div id="panel">
-    <div class="card">
-      <h2>
-        <span>視角與預設範例</span>
-        <button id="btn-clear" class="ctrl danger" style="padding: 3px 8px; font-size: 11px;">清空畫布</button>
-      </h2>
-      <div class="grid-2" style="margin-bottom: 6px;">
-        <button id="btn-reset-cam" class="ctrl">重設 3D 預設視角</button>
+    <div class="panel-top">
+      <div class="cam-bar">
+        <button id="btn-reset-cam" class="ctrl">重設 3D 視角</button>
         <button id="btn-top-cam" class="ctrl">俯視 xy 水平面</button>
+        <button id="btn-clear" class="ctrl danger">清空畫布</button>
       </div>
-      <div class="grid-2">
-        <button id="preset-1" class="ctrl">範例：平面與垂線投影</button>
-        <button id="preset-2" class="ctrl">範例：空間四面體架構</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>1. 新增空間點 $P(x, y, z)$</h2>
-      <div class="input-row">
-        <input id="pt-name" class="name-in" type="text" value="P" maxlength="4" />
-        <span>(</span>
-        <input id="pt-x" type="number" value="2" step="1" />
-        <input id="pt-y" type="number" value="2" step="1" />
-        <input id="pt-z" type="number" value="4" step="1" />
-        <span>)</span>
-        <button id="btn-add-pt" class="ctrl primary">加入點</button>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-build">+ 建立空間物件</button>
+        <button class="tab-btn" data-tab="tab-list">已建物件與算式 (<span id="obj-count">0</span>)</button>
       </div>
     </div>
 
-    <div class="card">
-      <h2>2. 兩點連成直線 / 線段（自動算距離）</h2>
-      <div class="input-row">
-        <select id="sel-p1"></select>
-        <span>與</span>
-        <select id="sel-p2"></select>
-        <select id="sel-line-type">
-          <option value="line">延伸直線</option>
-          <option value="seg">兩點線段</option>
-        </select>
-        <button id="btn-add-line" class="ctrl primary">連線</button>
+    <!-- 分頁 1：建立物件表單 -->
+    <div id="tab-build" class="tab-content active">
+      <div class="card">
+        <h2>1. 新增空間點 $P(x, y, z)$</h2>
+        <div class="input-row">
+          <input id="pt-name" class="name-in" type="text" value="A" maxlength="4" />
+          <span>(</span>
+          <input id="pt-x" type="number" value="2" step="1" />
+          <input id="pt-y" type="number" value="2" step="1" />
+          <input id="pt-z" type="number" value="4" step="1" />
+          <span>)</span>
+          <button id="btn-add-pt" class="ctrl primary">加入點</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2. 兩點幾何構造（線段 / 直線 / 向量）</h2>
+        <div class="input-row">
+          <select id="sel-p1"></select>
+          <span>至</span>
+          <select id="sel-p2"></select>
+          <select id="sel-line-type">
+            <option value="seg">兩點線段</option>
+            <option value="line">延伸直線</option>
+            <option value="vec">有向向量 AB</option>
+          </select>
+          <button id="btn-add-line" class="ctrl primary">建立</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3. 新增原點空間向量 $\vec{v} = (a, b, c)$</h2>
+        <div class="input-row">
+          <span>$\vec{v} =$ (</span>
+          <input id="vec-x" type="number" value="3" step="1" />
+          <input id="vec-y" type="number" value="-2" step="1" />
+          <input id="vec-z" type="number" value="2" step="1" />
+          <span>)</span>
+          <button id="btn-add-vec" class="ctrl primary">加入向量</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>4. 新增空間平面 $ax + by + cz = d$</h2>
+        <div class="input-row" style="font-size: 12.5px;">
+          <input id="pl-a" type="number" value="1" step="1" style="width:42px;" /><span>$x +$</span>
+          <input id="pl-b" type="number" value="1" step="1" style="width:42px;" /><span>$y +$</span>
+          <input id="pl-c" type="number" value="1" step="1" style="width:42px;" /><span>$z =$</span>
+          <input id="pl-d" type="number" value="4" step="1" style="width:42px;" />
+          <button id="btn-add-pl" class="ctrl primary">繪製平面</button>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>3. 新增空間向量 $\vec{v} = (a, b, c)$</h2>
-      <div class="input-row">
-        <span>$\vec{v} =$ (</span>
-        <input id="vec-x" type="number" value="3" step="1" />
-        <input id="vec-y" type="number" value="-2" step="1" />
-        <input id="vec-z" type="number" value="2" step="1" />
-        <span>)</span>
-        <button id="btn-add-vec" class="ctrl primary">加入向量</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>4. 新增平面 $ax + by + cz = d$（含法向量）</h2>
-      <div class="input-row" style="font-size: 12.5px;">
-        <input id="pl-a" type="number" value="1" step="1" style="width:42px;" /><span>$x +$</span>
-        <input id="pl-b" type="number" value="1" step="1" style="width:42px;" /><span>$y +$</span>
-        <input id="pl-c" type="number" value="1" step="1" style="width:42px;" /><span>$z =$</span>
-        <input id="pl-d" type="number" value="4" step="1" style="width:42px;" />
-        <button id="btn-add-pl" class="ctrl primary">繪製平面</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>已建立物件與幾何資訊（<span id="obj-count">0</span>）</h2>
+    <!-- 分頁 2：獨立物件清單與幾何資訊 -->
+    <div id="tab-list" class="tab-content">
       <div class="obj-list" id="obj-list"></div>
     </div>
   </div>
@@ -157,6 +174,16 @@
   const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
   renderMathInElement(document.body, katexOpts);
 
+  // 分頁切換邏輯
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
+
+  // 手機版收合面板
   const toggleBtn = document.getElementById('btn-mobile-toggle');
   const panelEl = document.getElementById('panel');
   toggleBtn.onclick = () => {
@@ -207,6 +234,16 @@
   let colorIdx = 0;
   function nextColor() { return palette[(colorIdx++) % palette.length]; }
 
+  function createPointLabelTexture(text, isLight) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
+    ctx.font = '700 28px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 128, 32);
+    return new THREE.CanvasTexture(c);
+  }
+
   function syncPointSelectors() {
     const pts = userObjects.filter(o => o.type === 'point');
     const s1 = document.getElementById('sel-p1');
@@ -223,6 +260,9 @@
     const listEl = document.getElementById('obj-list');
     document.getElementById('obj-count').textContent = userObjects.length;
     listEl.innerHTML = '';
+    if (userObjects.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:24px 0;">目前畫布為空，請切換至「+ 建立空間物件」新增</div>';
+    }
     userObjects.forEach((item, idx) => {
       const row = document.createElement('div');
       row.className = 'obj-item';
@@ -247,7 +287,7 @@
     syncPointSelectors();
   }
 
-  function addPoint(name, x, y, z) {
+  function addPoint(name, x, y, z, autoSwitch = true) {
     const col = nextColor();
     const g = new THREE.Group();
     const pos = m2w(x, y, z);
@@ -258,26 +298,28 @@
     const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, proj]), new THREE.LineDashedMaterial({ color: 0x64748b, dashSize: 0.18, gapSize: 0.12 }));
     dash.computeLineDistances(); g.add(dash);
 
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-    const ctx = c.getContext('2d'); ctx.fillStyle = document.body.classList.contains('light-theme') ? '#0f172a' : '#f8fafc';
-    ctx.font = '700 28px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(`${name}(${x},${y},${z})`, 128, 32);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+    const textStr = `${name}(${x},${y},${z})`;
+    const isLight = document.body.classList.contains('light-theme');
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: createPointLabelTexture(textStr, isLight), transparent: true }));
     sp.position.copy(pos).add(new THREE.Vector3(0, 0.45, 0)); sp.scale.set(2.4, 0.6, 1); g.add(sp);
 
     scene.add(g);
-    userObjects.push({ type: 'point', name, coords: [x, y, z], label: `點 ${name}(${x}, ${y}, ${z})`, sub: `至 xy 平面高度 |z| = ${Math.abs(z)}`, color: col, group: g });
+    userObjects.push({
+      type: 'point', name, coords: [x, y, z], sprite: sp, textStr,
+      label: `點 ${name}(${x}, ${y}, ${z})`, sub: `至 xy 平面高度 |z| = ${Math.abs(z)}`, color: col, group: g
+    });
     renderObjList();
+    if (autoSwitch) switchTab('tab-list');
   }
 
-  function addLineBetweenPoints() {
+  function addLineBetweenPoints(autoSwitch = true) {
     const pts = userObjects.filter(o => o.type === 'point');
     if (pts.length < 2) return;
     const p1 = pts[Number(document.getElementById('sel-p1').value)];
     const p2 = pts[Number(document.getElementById('sel-p2').value)];
     if (!p1 || !p2 || p1 === p2) return;
 
-    const lineType = document.getElementById('sel-line-type').value;
+    const mode = document.getElementById('sel-line-type').value;
     const [x1, y1, z1] = p1.coords;
     const [x2, y2, z2] = p2.coords;
     const dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
@@ -288,24 +330,30 @@
     const col = nextColor();
     const g = new THREE.Group();
 
-    if (lineType === 'seg') {
+    let titlePrefix = '線段';
+    if (mode === 'seg') {
       g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([w1, w2]), new THREE.LineBasicMaterial({ color: col })));
-    } else {
+    } else if (mode === 'line') {
+      titlePrefix = '直線';
       const dir = new THREE.Vector3().subVectors(w2, w1).normalize();
       const mid = new THREE.Vector3().addVectors(w1, w2).multiplyScalar(0.5);
-      const extA = mid.clone().addScaledVector(dir, -9);
-      const extB = mid.clone().addScaledVector(dir, 9);
-      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([extA, extB]), new THREE.LineBasicMaterial({ color: col })));
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([mid.clone().addScaledVector(dir, -9), mid.clone().addScaledVector(dir, 9)]), new THREE.LineBasicMaterial({ color: col })));
+    } else {
+      titlePrefix = '向量';
+      const vecW = new THREE.Vector3().subVectors(w2, w1);
+      g.add(new THREE.ArrowHelper(vecW.clone().normalize(), w1, vecW.length(), col, 0.4, 0.24));
     }
+
     scene.add(g);
     userObjects.push({
       type: 'line',
-      label: `${lineType === 'seg' ? '線段' : '直線'} ${p1.name}${p2.name}`,
-      sub: `方向向量 (${dx}, ${dy}, ${dz}) · 兩點距離 = ${dist}`,
+      label: `${titlePrefix} ${p1.name}${p2.name}`,
+      sub: `方向分量 (${dx}, ${dy}, ${dz}) · 長度 = ${dist}`,
       color: col,
       group: g
     });
     renderObjList();
+    if (autoSwitch) switchTab('tab-list');
   }
 
   function addVector(a, b, c) {
@@ -319,9 +367,10 @@
     scene.add(g);
     userObjects.push({ type: 'vector', label: `向量 v = (${a}, ${b}, ${c})`, sub: `向量長度 |v| = √(${a*a+b*b+c*c}) ≈ ${normVal}`, color: col, group: g });
     renderObjList();
+    switchTab('tab-list');
   }
 
-  function addPlane(a, b, c, d) {
+  function addPlane(a, b, c, d, autoSwitch = true) {
     const normalMath = new THREE.Vector3(a, b, c);
     if (normalMath.length() < 0.001) return;
     const col = nextColor();
@@ -333,7 +382,7 @@
     const centerOnPlane = nUnit.clone().multiplyScalar(distFromOrigin);
 
     const planeGeo = new THREE.PlaneGeometry(8, 8);
-    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.3 }));
+    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.28 }));
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nUnit);
     mesh.position.copy(centerOnPlane);
     g.add(mesh);
@@ -347,6 +396,7 @@
     scene.add(g);
     userObjects.push({ type: 'plane', label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, sub: `法向量 n = (${a}, ${b}, ${c})`, color: col, group: g });
     renderObjList();
+    if (autoSwitch) switchTab('tab-list');
   }
 
   function clearAll() {
@@ -354,6 +404,7 @@
     userObjects.length = 0;
     colorIdx = 0;
     renderObjList();
+    switchTab('tab-build');
   }
 
   document.getElementById('btn-clear').onclick = clearAll;
@@ -362,7 +413,7 @@
   document.getElementById('btn-add-pt').onclick = () => {
     addPoint(document.getElementById('pt-name').value || 'P', Number(document.getElementById('pt-x').value), Number(document.getElementById('pt-y').value), Number(document.getElementById('pt-z').value));
   };
-  document.getElementById('btn-add-line').onclick = addLineBetweenPoints;
+  document.getElementById('btn-add-line').onclick = () => addLineBetweenPoints(true);
   document.getElementById('btn-add-vec').onclick = () => {
     addVector(Number(document.getElementById('vec-x').value), Number(document.getElementById('vec-y').value), Number(document.getElementById('vec-z').value));
   };
@@ -370,30 +421,26 @@
     addPlane(Number(document.getElementById('pl-a').value), Number(document.getElementById('pl-b').value), Number(document.getElementById('pl-c').value), Number(document.getElementById('pl-d').value));
   };
 
-  document.getElementById('preset-1').onclick = () => {
-    clearAll();
-    addPlane(1, 1, 1, 4);
-    addPoint('P', 3, 3, 4);
-    addPoint('H', 1, 1, 2);
-    document.getElementById('sel-line-type').value = 'seg';
-    addLineBetweenPoints();
-  };
-  document.getElementById('preset-2').onclick = () => {
-    clearAll();
-    addPoint('A', 0, 0, 4);
-    addPoint('B', 3, 0, 0);
-    addPoint('C', 0, 3, 0);
-    document.getElementById('sel-line-type').value = 'seg';
-    addLineBetweenPoints();
-  };
-
+  // 深淺色模式切換（同步更新 3D 點標籤與基準網格顏色）
   document.getElementById('btn-theme').onclick = (e) => {
-    const isL = document.body.classList.toggle('light-theme');
-    e.target.textContent = isL ? '深色模式' : '淺色模式';
+    const isLight = document.body.classList.toggle('light-theme');
+    e.target.textContent = isLight ? '深色模式' : '淺色模式';
+    gridHelper.material.color.setHex(isLight ? 0xcbd5e1 : 0x334155);
+    userObjects.forEach(obj => {
+      if (obj.type === 'point' && obj.sprite) {
+        obj.sprite.material.map.dispose();
+        obj.sprite.material.map = createPointLabelTexture(obj.textStr, isLight);
+        obj.sprite.material.needsUpdate = true;
+      }
+    });
   };
 
-  // 預設載入一組完整的點到平面垂足連線示範
-  document.getElementById('preset-1').click();
+  // 預設載入一組精簡的「點到平面垂足」結構示範（停留在建立分頁方便直接操作）
+  addPlane(1, 1, 1, 4, false);
+  addPoint('P', 3, 3, 4, false);
+  addPoint('H', 1, 1, 2, false);
+  addLineBetweenPoints(false);
+  switchTab('tab-build');
 
   function animate() {
     requestAnimationFrame(animate);
