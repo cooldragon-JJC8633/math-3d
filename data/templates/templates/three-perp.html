@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 互動圖解｜三垂線定理</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+    body { margin: 0; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    header a { color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600; }
+    header h1 { font-size: 15px; margin: 0; }
+    #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
+    #canvas-container { flex: 1.4; position: relative; cursor: grab; }
+    #hint-badge { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.8); padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #cbd5e1; pointer-events: none; border: 1px solid #334155; }
+    #panel { flex: 1; max-width: 420px; background: #1e293b; border-left: 1px solid #334155; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px 0; color: #facc15; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #e2e8f0; margin: 4px 0; }
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button { background: #2563eb; color: white; border: none; padding: 10px 8px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    button.secondary { background: #334155; color: #e2e8f0; }
+    @media (max-width: 768px) {
+      #main { flex-direction: column; }
+      #canvas-container { flex: 1.1; }
+      #panel { max-width: 100%; flex: 1; border-left: none; border-top: 1px solid #334155; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 返回題目列表</a>
+  <h1 id="header-title">三垂線定理</h1>
+  <span>3D 互動</span>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="hint-badge">👆 拖曳旋轉｜觀察三個直角記號</div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <h2>📝 經典段考題</h2>
+      <p id="q-text"></p>
+    </div>
+    <div class="card">
+      <h2>🎮 互動視角切換</h2>
+      <div class="btn-group">
+        <button id="btn-top">🦅 切換「正上方俯視」地板</button>
+        <button id="btn-reset" class="secondary">🔄 恢復立體 3D 視角</button>
+        <button id="btn-plane" class="secondary">📐 顯示/隱藏斜平面 PBC</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>💡 家教人話版：3 步看穿三垂線</h2>
+      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const probId = urlParams.get('id') || 'vec-02';
+
+  fetch('../data/space-vector.json').then(r => r.json()).then(data => {
+    const prob = data.problems.find(p => p.id === probId) || data.problems[1];
+    document.getElementById('header-title').textContent = prob.title;
+    document.getElementById('q-text').innerHTML = prob.questionLatex;
+    const ol = document.getElementById('steps-list');
+    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+    renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+  });
+
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  const camDef = [9, 7, 10], camTop = [0, 14, 0.1];
+  camera.position.set(...camDef);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // 地板平面 E
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshBasicMaterial({ color: 0x1e293b, side: THREE.DoubleSide, transparent: true, opacity: 0.8 }));
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+  scene.add(new THREE.GridHelper(12, 12, 0x334155, 0x1e293b));
+
+  // 關鍵點座標：A(-2,0,-1), P(-2,4,-1), B(1,0,-1), C(1,0,4)
+  const A = new THREE.Vector3(-2, 0, -1);
+  const P = new THREE.Vector3(-2, 4, -1);
+  const B = new THREE.Vector3(1, 0, -1);
+  const C = new THREE.Vector3(1, 0, 4);
+  const L1 = new THREE.Vector3(1, 0, -4.5), L2 = new THREE.Vector3(1, 0, 5.2);
+
+  function addLine(p1, p2, color) {
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), new THREE.LineBasicMaterial({ color }));
+    scene.add(l); return l;
+  }
+  addLine(L1, L2, 0x94a3b8); // 直線 L
+  addLine(P, A, 0x38bdf8);   // 第一垂 PA（藍）
+  addLine(A, B, 0x34d399);   // 第二垂 AB（綠）
+  addLine(P, B, 0xfacc15);   // 第三垂 PB（黃）
+  addLine(P, C, 0xf97316);   // 斜線 PC（橘）
+
+  // 輔助直角小方框（在 B 點標示 PB 垂直 L）
+  const sq = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(1, 0, -0.4), new THREE.Vector3(0.65, 0.45, -0.4), new THREE.Vector3(0.65, 0.45, -1)
+  ]), new THREE.LineBasicMaterial({ color: 0xfacc15 }));
+  scene.add(sq);
+
+  // 斜平面三角形 PBC 填色
+  const pbcMesh = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([P, B, C]), new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.28 }));
+  scene.add(pbcMesh);
+
+  // 頂點標籤
+  [['P', P, '#38bdf8'], ['A', A, '#f8fafc'], ['B', B, '#facc15'], ['C', C, '#f97316']].forEach(([txt, pos, col]) => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d'); ctx.fillStyle = col; ctx.font = 'bold 64px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 64, 64);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) }));
+    sp.position.copy(pos).add(new THREE.Vector3(0, 0.55, 0)); sp.scale.set(1.1, 1.1, 1.1); scene.add(sp);
+  });
+
+  let isTop = false;
+  document.getElementById('btn-top').onclick = () => { isTop = !isTop; camera.position.set(...(isTop ? camTop : camDef)); controls.target.set(0,0,0); };
+  document.getElementById('btn-reset').onclick = () => { isTop = false; camera.position.set(...camDef); controls.target.set(0,0,0); };
+  document.getElementById('btn-plane').onclick = () => { pbcMesh.visible = !pbcMesh.visible; };
+
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => { camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+</script>
+</body>
+</html>
