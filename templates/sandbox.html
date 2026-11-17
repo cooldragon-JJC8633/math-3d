@@ -61,7 +61,7 @@
 
     button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 7px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
     button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    button.ctrl.danger { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+    button.ctrl.danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
 
     .obj-list { display: flex; flex-direction: column; gap: 8px; }
     .obj-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); gap: 8px; }
@@ -169,6 +169,24 @@
   const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
   renderMathInElement(document.body, katexOpts);
 
+  // 雙主題專屬高對比色票（黑底用高明度亮色、白底用高飽和深色）
+  const THEME_PALETTE = {
+    dark: {
+      axes: { x: '#f87171', y: '#34d399', z: '#60a5fa' },
+      gridMain: 0x64748b, gridSub: 0x26334d,
+      items: ['#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#22d3ee'],
+      labelTxt: '#f8fafc', dashLine: 0x94a3b8, planeOpacity: 0.34
+    },
+    light: {
+      axes: { x: '#dc2626', y: '#059669', z: '#2563eb' },
+      gridMain: 0x64748b, gridSub: 0xcbd5e1,
+      items: ['#1d4ed8', '#047857', '#d97706', '#be185d', '#6d28d9', '#0e7490'],
+      labelTxt: '#0f172a', dashLine: 0x475569, planeOpacity: 0.38
+    }
+  };
+  let isLightMode = false;
+  function getTheme() { return isLightMode ? THEME_PALETTE.light : THEME_PALETTE.dark; }
+
   function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
@@ -183,7 +201,6 @@
     window.dispatchEvent(new Event('resize'));
   };
 
-  // Three.js 場景（調校相機仰角讓 X/Y/Z 三軸清晰分開）
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
@@ -205,50 +222,44 @@
 
   function m2w(x, y, z) { return new THREE.Vector3(y, z, x); }
 
-  // 高對比水平地板網格（深色模式下清楚可見）
-  let gridHelper = new THREE.GridHelper(12, 12, 0x64748b, 0x26334d);
+  let gridHelper = new THREE.GridHelper(12, 12, getTheme().gridMain, getTheme().gridSub);
   scene.add(gridHelper);
 
-  // 加粗版立體圓柱座標軸（解決 WebGL 細線在深色模式看不清的問題）
-  function makeThickAxis(endVec, colorHex, labelTxt, labelPos) {
+  // 可動態換色的粗體三軸
+  const axisObjects = [];
+  function createSpriteLabel(text, colorHex, fontSize = 36, w = 64, h = 64) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d'); ctx.fillStyle = colorHex; ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function makeThickAxis(axisKey, endVec, labelTxt, labelPos) {
+    const col = getTheme().axes[axisKey];
     const len = endVec.length();
-    const cylGeo = new THREE.CylinderGeometry(0.032, 0.032, len, 12);
+    const mat = new THREE.MeshBasicMaterial({ color: col });
+    const cylGeo = new THREE.CylinderGeometry(0.035, 0.035, len, 12);
     cylGeo.translate(0, len / 2, 0);
-    const cylMat = new THREE.MeshBasicMaterial({ color: colorHex });
-    const cyl = new THREE.Mesh(cylGeo, cylMat);
+    const cyl = new THREE.Mesh(cylGeo, mat);
     cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), endVec.clone().normalize());
     scene.add(cyl);
 
-    const coneGeo = new THREE.ConeGeometry(0.11, 0.32, 16);
-    const cone = new THREE.Mesh(coneGeo, cylMat);
-    cone.position.copy(endVec);
-    cone.quaternion.copy(cyl.quaternion);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 16), mat);
+    cone.position.copy(endVec); cone.quaternion.copy(cyl.quaternion);
     scene.add(cone);
 
-    const c = document.createElement('canvas'); c.width = 64; c.height = 64;
-    const ctx = c.getContext('2d'); ctx.fillStyle = colorHex; ctx.font = 'bold 38px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(labelTxt, 32, 32);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
-    sp.position.copy(labelPos); sp.scale.set(0.85, 0.85, 0.85); scene.add(sp);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: createSpriteLabel(labelTxt, col, 38), transparent: true }));
+    sp.position.copy(labelPos); sp.scale.set(0.85, 0.85, 0.85);
+    scene.add(sp);
+
+    axisObjects.push({ axisKey, mat, sp, labelTxt });
   }
-  makeThickAxis(new THREE.Vector3(0, 0, 6.2), '#f87171', 'X', new THREE.Vector3(0, 0.35, 6.7));
-  makeThickAxis(new THREE.Vector3(6.2, 0, 0), '#34d399', 'Y', new THREE.Vector3(6.7, 0.35, 0));
-  makeThickAxis(new THREE.Vector3(0, 6.2, 0), '#60a5fa', 'Z', new THREE.Vector3(0, 6.7, 0));
+  makeThickAxis('x', new THREE.Vector3(0, 0, 6.2), 'X', new THREE.Vector3(0, 0.35, 6.7));
+  makeThickAxis('y', new THREE.Vector3(6.2, 0, 0), 'Y', new THREE.Vector3(6.7, 0.35, 0));
+  makeThickAxis('z', new THREE.Vector3(0, 6.2, 0), 'Z', new THREE.Vector3(0, 6.7, 0));
 
   const userObjects = [];
-  const palette = ['#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#22d3ee'];
-  let colorIdx = 0;
-  function nextColor() { return palette[(colorIdx++) % palette.length]; }
-
-  function createPointLabelTexture(text, isLight) {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
-    ctx.font = '700 28px sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(text, 128, 32);
-    return new THREE.CanvasTexture(c);
-  }
+  let colorCounter = 0;
 
   function syncPointSelectors() {
     const pts = userObjects.filter(o => o.type === 'point');
@@ -266,12 +277,14 @@
     if (userObjects.length === 0) {
       listEl.innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:24px 0;">目前畫布為空，請切換至「+ 建立空間物件」新增</div>';
     }
+    const palette = getTheme().items;
     userObjects.forEach((item, idx) => {
+      const hex = palette[item.colorIdx % palette.length];
       const row = document.createElement('div');
       row.className = 'obj-item';
       row.innerHTML = `
         <div>
-          <span><strong style="color:${item.color};">●</strong> ${item.label}</span>
+          <span><strong style="color:${hex};">●</strong> ${item.label}</span>
           ${item.sub ? `<span class="obj-sub">${item.sub}</span>` : ''}
         </div>
         <button class="del-btn" data-idx="${idx}">移除</button>
@@ -291,25 +304,28 @@
   }
 
   function addPoint(name, x, y, z, autoSwitch = true) {
-    const col = nextColor();
+    const cIdx = colorCounter++;
+    const col = getTheme().items[cIdx % 6];
     const g = new THREE.Group();
     const pos = m2w(x, y, z);
-    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), new THREE.MeshBasicMaterial({ color: col }));
+
+    const dotMat = new THREE.MeshBasicMaterial({ color: col });
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), dotMat);
     dot.position.copy(pos); g.add(dot);
 
-    const proj = m2w(x, y, 0);
-    const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, proj]), new THREE.LineDashedMaterial({ color: 0x94a3b8, dashSize: 0.2, gapSize: 0.12 }));
+    const dashMat = new THREE.LineDashedMaterial({ color: getTheme().dashLine, dashSize: 0.2, gapSize: 0.12 });
+    const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, m2w(x, y, 0)]), dashMat);
     dash.computeLineDistances(); g.add(dash);
 
     const textStr = `${name}(${x},${y},${z})`;
-    const isLight = document.body.classList.contains('light-theme');
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: createPointLabelTexture(textStr, isLight), transparent: true }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: createSpriteLabel(textStr, getTheme().labelTxt, 28, 256, 64), transparent: true }));
     sp.position.copy(pos).add(new THREE.Vector3(0, 0.45, 0)); sp.scale.set(2.4, 0.6, 1); g.add(sp);
 
     scene.add(g);
     userObjects.push({
-      type: 'point', name, coords: [x, y, z], sprite: sp, textStr,
-      label: `點 ${name}(${x}, ${y}, ${z})`, sub: `至 xy 平面高度 |z| = ${Math.abs(z)}`, color: col, group: g
+      type: 'point', name, coords: [x, y, z], colorIdx: cIdx, sprite: sp, textStr,
+      materials: [dotMat], dashMat,
+      label: `點 ${name}(${x}, ${y}, ${z})`, sub: `至 xy 平面高度 |z| = ${Math.abs(z)}`, group: g
     });
     renderObjList();
     if (autoSwitch) switchTab('tab-list');
@@ -330,45 +346,56 @@
 
     const w1 = m2w(x1, y1, z1);
     const w2 = m2w(x2, y2, z2);
-    const col = nextColor();
+    const cIdx = colorCounter++;
+    const col = getTheme().items[cIdx % 6];
     const g = new THREE.Group();
+    const mats = [];
+    let arrowObj = null;
 
     let titlePrefix = '線段';
     if (mode === 'seg') {
-      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([w1, w2]), new THREE.LineBasicMaterial({ color: col })));
+      const m = new THREE.LineBasicMaterial({ color: col });
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([w1, w2]), m));
+      mats.push(m);
     } else if (mode === 'line') {
       titlePrefix = '直線';
+      const m = new THREE.LineBasicMaterial({ color: col });
       const dir = new THREE.Vector3().subVectors(w2, w1).normalize();
       const mid = new THREE.Vector3().addVectors(w1, w2).multiplyScalar(0.5);
-      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([mid.clone().addScaledVector(dir, -9), mid.clone().addScaledVector(dir, 9)]), new THREE.LineBasicMaterial({ color: col })));
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([mid.clone().addScaledVector(dir, -9), mid.clone().addScaledVector(dir, 9)]), m));
+      mats.push(m);
     } else {
       titlePrefix = '向量';
       const vecW = new THREE.Vector3().subVectors(w2, w1);
-      g.add(new THREE.ArrowHelper(vecW.clone().normalize(), w1, vecW.length(), col, 0.4, 0.24));
+      arrowObj = new THREE.ArrowHelper(vecW.clone().normalize(), w1, vecW.length(), col, 0.4, 0.24);
+      g.add(arrowObj);
     }
 
     scene.add(g);
     userObjects.push({
-      type: 'line',
+      type: 'line', colorIdx: cIdx, materials: mats, arrowObj,
       label: `${titlePrefix} ${p1.name}${p2.name}`,
-      sub: `方向分量 (${dx}, ${dy}, ${dz}) · 長度 = ${dist}`,
-      color: col,
-      group: g
+      sub: `方向分量 (${dx}, ${dy}, ${dz}) · 長度 = ${dist}`, group: g
     });
     renderObjList();
     if (autoSwitch) switchTab('tab-list');
   }
 
   function addVector(a, b, c) {
-    const col = nextColor();
-    const g = new THREE.Group();
     const end = m2w(a, b, c);
     const len = end.length();
     if (len < 0.01) return;
+    const cIdx = colorCounter++;
+    const col = getTheme().items[cIdx % 6];
+    const g = new THREE.Group();
     const normVal = Math.round(Math.hypot(a, b, c) * 100) / 100;
-    g.add(new THREE.ArrowHelper(end.clone().normalize(), new THREE.Vector3(0,0,0), len, col, 0.4, 0.25));
+    const arrowObj = new THREE.ArrowHelper(end.clone().normalize(), new THREE.Vector3(0,0,0), len, col, 0.4, 0.25);
+    g.add(arrowObj);
     scene.add(g);
-    userObjects.push({ type: 'vector', label: `向量 v = (${a}, ${b}, ${c})`, sub: `向量長度 |v| = √(${a*a+b*b+c*c}) ≈ ${normVal}`, color: col, group: g });
+    userObjects.push({
+      type: 'vector', colorIdx: cIdx, arrowObj,
+      label: `向量 v = (${a}, ${b}, ${c})`, sub: `向量長度 |v| = √(${a*a+b*b+c*c}) ≈ ${normVal}`, group: g
+    });
     renderObjList();
     switchTab('tab-list');
   }
@@ -376,7 +403,8 @@
   function addPlane(a, b, c, d, autoSwitch = true) {
     const normalMath = new THREE.Vector3(a, b, c);
     if (normalMath.length() < 0.001) return;
-    const col = nextColor();
+    const cIdx = colorCounter++;
+    const col = getTheme().items[cIdx % 6];
     const g = new THREE.Group();
 
     const nW = m2w(a, b, c);
@@ -385,27 +413,63 @@
     const centerOnPlane = nUnit.clone().multiplyScalar(distFromOrigin);
 
     const planeGeo = new THREE.PlaneGeometry(8, 8);
-    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.34 }));
+    const meshMat = new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: getTheme().planeOpacity });
+    const mesh = new THREE.Mesh(planeGeo, meshMat);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nUnit);
     mesh.position.copy(centerOnPlane);
     g.add(mesh);
 
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(planeGeo), new THREE.LineBasicMaterial({ color: col }));
+    const edgeMat = new THREE.LineBasicMaterial({ color: col });
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(planeGeo), edgeMat);
     edges.quaternion.copy(mesh.quaternion);
     edges.position.copy(centerOnPlane);
     g.add(edges);
 
-    g.add(new THREE.ArrowHelper(nUnit, centerOnPlane, 2.5, col, 0.38, 0.24));
+    const arrowObj = new THREE.ArrowHelper(nUnit, centerOnPlane, 2.5, col, 0.38, 0.24);
+    g.add(arrowObj);
     scene.add(g);
-    userObjects.push({ type: 'plane', label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, sub: `法向量 n = (${a}, ${b}, ${c})`, color: col, group: g });
+    userObjects.push({
+      type: 'plane', colorIdx: cIdx, materials: [meshMat, edgeMat], meshMat, arrowObj,
+      label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, sub: `法向量 n = (${a}, ${b}, ${c})`, group: g
+    });
     renderObjList();
     if (autoSwitch) switchTab('tab-list');
+  }
+
+  // 一鍵動態切換深淺色全套 3D 色票
+  function applyThemeTo3D() {
+    const th = getTheme();
+    scene.remove(gridHelper);
+    gridHelper = new THREE.GridHelper(12, 12, th.gridMain, th.gridSub);
+    scene.add(gridHelper);
+
+    axisObjects.forEach(ax => {
+      const c = th.axes[ax.axisKey];
+      ax.mat.color.set(c);
+      ax.sp.material.map.dispose();
+      ax.sp.material.map = createSpriteLabel(ax.labelTxt, c, 38);
+      ax.sp.material.needsUpdate = true;
+    });
+
+    userObjects.forEach(obj => {
+      const hex = th.items[obj.colorIdx % 6];
+      if (obj.materials) obj.materials.forEach(m => m.color.set(hex));
+      if (obj.meshMat) obj.meshMat.opacity = th.planeOpacity;
+      if (obj.arrowObj) obj.arrowObj.setColor(new THREE.Color(hex));
+      if (obj.dashMat) obj.dashMat.color.setHex(th.dashLine);
+      if (obj.type === 'point' && obj.sprite) {
+        obj.sprite.material.map.dispose();
+        obj.sprite.material.map = createSpriteLabel(obj.textStr, th.labelTxt, 28, 256, 64);
+        obj.sprite.material.needsUpdate = true;
+      }
+    });
+    renderObjList();
   }
 
   function clearAll() {
     userObjects.forEach(item => scene.remove(item.group));
     userObjects.length = 0;
-    colorIdx = 0;
+    colorCounter = 0;
     renderObjList();
     switchTab('tab-build');
   }
@@ -425,21 +489,12 @@
   };
 
   document.getElementById('btn-theme').onclick = (e) => {
-    const isLight = document.body.classList.toggle('light-theme');
-    e.target.textContent = isLight ? '深色模式' : '淺色模式';
-    scene.remove(gridHelper);
-    gridHelper = new THREE.GridHelper(12, 12, isLight ? 0x94a3b8 : 0x64748b, isLight ? 0xe2e8f0 : 0x26334d);
-    scene.add(gridHelper);
-    userObjects.forEach(obj => {
-      if (obj.type === 'point' && obj.sprite) {
-        obj.sprite.material.map.dispose();
-        obj.sprite.material.map = createPointLabelTexture(obj.textStr, isLight);
-        obj.sprite.material.needsUpdate = true;
-      }
-    });
+    isLightMode = !isLightMode;
+    document.body.classList.toggle('light-theme', isLightMode);
+    e.target.textContent = isLightMode ? '深色模式' : '淺色模式';
+    applyThemeTo3D();
   };
 
-  // 預設載入精簡的「點到平面垂足」結構示範
   addPlane(1, 1, 1, 4, false);
   addPoint('P', 3, 3, 4, false);
   addPoint('H', 1, 1, 2, false);
