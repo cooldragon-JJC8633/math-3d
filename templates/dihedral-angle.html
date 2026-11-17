@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script
+  <script src="../assets/auth.js"></script>                                                                                  
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     :root { --bg-base: #0b0f19; --bg-panel: #131a2a; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; }
@@ -111,6 +112,7 @@
 
   fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
     const prob = data.problems.find(p => p.id === probId) || data.problems[3];
+    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
     document.getElementById('header-title').textContent = `${prob.num || '04'}. ${prob.title}`;
     document.getElementById('q-text').innerHTML = prob.questionLatex;
     const ol = document.getElementById('steps-list');
