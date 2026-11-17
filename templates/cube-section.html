@@ -2,146 +2,202 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D 互動圖解｜正立方體截面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>3D 互動檢視｜正立方體截面</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-panel: #131a2a;
+      --border: #243049;
+      --accent: #3b82f6;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
-    body { margin: 0; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-    header a { color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600; }
-    header h1 { font-size: 15px; margin: 0; color: #f8fafc; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    header a:hover { color: var(--text-main); }
+    header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #btn-mobile-toggle { display: none; background: #1e293b; border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
-    #canvas-container { flex: 1.4; position: relative; cursor: grab; }
-    #hint-badge { position: absolute; top: 12px; left: 12px; background: rgba(15,23,42,0.8); padding: 6px 10px; border-radius: 6px; font-size: 12px; color: #cbd5e1; pointer-events: none; border: 1px solid #334155; }
-    #panel { flex: 1; max-width: 420px; background: #1e293b; border-left: 1px solid #334155; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .card { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px; }
-    .card h2 { font-size: 14px; margin: 0 0 8px 0; color: #facc15; }
-    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #e2e8f0; margin: 4px 0; }
+    #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
+    #canvas-container:active { cursor: grabbing; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(11, 15, 25, 0.75); padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+
+    #panel { flex: 1; max-width: 420px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #cbd5e1; margin: 4px 0; }
+    .card strong { color: var(--text-main); }
+
     .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    button { background: #2563eb; color: white; border: none; padding: 10px 8px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    button:hover { background: #1d4ed8; }
-    button.secondary { background: #334155; color: #e2e8f0; }
-    .slider-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 8px; }
+    button.ctrl { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); padding: 9px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    button.ctrl:hover { border-color: var(--accent); }
+    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .slider-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+    .slider-header { display: flex; justify-content: space-between; align-items: center; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+
     @media (max-width: 768px) {
+      #btn-mobile-toggle { display: inline-block; }
       #main { flex-direction: column; }
-      #canvas-container { flex: 1.1; }
-      #panel { max-width: 100%; flex: 1; border-left: none; border-top: 1px solid #334155; }
+      #canvas-container { flex: 1; }
+      #panel { max-width: 100%; flex: 1.05; border-left: none; border-top: 1px solid var(--border); }
+      #panel.collapsed { display: none; }
     }
   </style>
 </head>
 <body>
 <header>
-  <a href="../index.html">← 返回題目列表</a>
-  <h1 id="header-title">正立方體截面</h1>
-  <span>3D 互動</span>
+  <a href="../index.html">← 目錄</a>
+  <h1 id="header-title">載入中...</h1>
+  <button id="btn-mobile-toggle">隱藏解析</button>
 </header>
 
 <div id="main">
   <div id="canvas-container">
-    <div id="hint-badge">👆 拖曳旋轉｜滾輪/雙指縮放</div>
+    <div id="hint-badge">單指拖曳旋轉 · 雙指縮放</div>
   </div>
   <div id="panel">
     <div class="card">
-      <h2>📝 題目（引數即時連動）</h2>
+      <h2>題目敘述與參數聯動</h2>
       <p id="q-text"></p>
-      <div class="slider-row">
-        <span>調整邊長 $a =$ <strong id="val-side">6</strong> $\Rightarrow$ 距離 $= \frac{\sqrt{3}}{3}a =$ <strong id="ans-dist" style="color:#38bdf8;">2√3</strong></span>
+      <div class="slider-box">
+        <div class="slider-header">
+          <span id="latex-side"></span>
+          <span id="latex-ans" style="color: #38bdf8; font-weight: 600;"></span>
+        </div>
         <input type="range" id="slider-side" min="3" max="15" step="3" value="6" />
       </div>
     </div>
+
     <div class="card">
-      <h2>🎮 互動視角與輔助線</h2>
+      <h2>視角與輔助線控制</h2>
       <div class="btn-group">
-        <button id="btn-perp">✨ 切換「正交垂直」視角</button>
-        <button id="btn-reset" class="secondary">🔄 恢復預設 3D 視角</button>
-        <button id="btn-toggle-diag" class="secondary">📏 顯示/隱藏對角線 AG</button>
-        <button id="btn-toggle-tri" class="secondary">🔺 顯示/隱藏等腰稜邊</button>
+        <button id="btn-perp" class="ctrl primary">切換正交垂直視角</button>
+        <button id="btn-reset" class="ctrl">重設預設 3D 視角</button>
+        <button id="btn-toggle-diag" class="ctrl">顯示 / 隱藏對角線 AG</button>
+        <button id="btn-toggle-tri" class="ctrl">顯示 / 隱藏等腰稜邊</button>
       </div>
     </div>
+
     <div class="card">
-      <h2>💡 家教人話版：3 步看穿這題</h2>
+      <h2>核心解題直覺（3 步拆解）</h2>
       <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
     </div>
   </div>
 </div>
 
 <script>
+  const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
   const urlParams = new URLSearchParams(window.location.search);
   const probId = urlParams.get('id') || 'vec-01';
 
+  // 手機版收合解析切換
+  const toggleBtn = document.getElementById('btn-mobile-toggle');
+  const panelEl = document.getElementById('panel');
+  toggleBtn.onclick = () => {
+    panelEl.classList.toggle('collapsed');
+    toggleBtn.textContent = panelEl.classList.contains('collapsed') ? '顯示解析' : '隱藏解析';
+    window.dispatchEvent(new Event('resize'));
+  };
+
+  function updateSideUI(a) {
+    const sideEl = document.getElementById('latex-side');
+    const ansEl = document.getElementById('latex-ans');
+    sideEl.innerHTML = `設定邊長 $a = ${a}$`;
+    ansEl.innerHTML = `距離 $h = \\frac{\\sqrt{3}}{3}a = ${a / 3}\\sqrt{3}$`;
+    if (window.renderMathInElement) {
+      renderMathInElement(sideEl, katexOpts);
+      renderMathInElement(ansEl, katexOpts);
+    }
+  }
+
   fetch('../data/space-vector.json').then(r => r.json()).then(data => {
     const prob = data.problems.find(p => p.id === probId) || data.problems[0];
-    document.getElementById('header-title').textContent = prob.title;
+    document.getElementById('header-title').textContent = `${prob.num}. ${prob.title}`;
     document.getElementById('q-text').innerHTML = prob.questionLatex;
     const initSide = prob.params.side || 6;
     document.getElementById('slider-side').value = initSide;
-    updateSideUI(initSide);
 
     const ol = document.getElementById('steps-list');
     prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
-    renderMathInElement(document.body, { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] });
+
+    updateSideUI(initSide);
+    renderMathInElement(document.body, katexOpts);
   });
 
-  function updateSideUI(a) {
-    document.getElementById('val-side').textContent = a;
-    document.getElementById('ans-dist').textContent = `${a / 3}√3`;
-  }
   document.getElementById('slider-side').addEventListener('input', e => updateSideUI(Number(e.target.value)));
 
-  // Three.js 3D 渲染
+  // Three.js 場景設定
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-  const camDef = [10, 8, 11], camPerp = [11, -5.5, 0];
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+  const camDef = [9.5, 7.5, 10.5], camPerp = [11, -5.5, 0];
   camera.position.set(...camDef);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  controls.dampingFactor = 0.08;
 
-  const s = 3;
+  const s = 2.8;
   const pts = {
     A: new THREE.Vector3(-s, s, s), B: new THREE.Vector3(s, s, s), C: new THREE.Vector3(s, s, -s), D: new THREE.Vector3(-s, s, -s),
     E: new THREE.Vector3(-s, -s, s), F: new THREE.Vector3(s, -s, s), G: new THREE.Vector3(s, -s, -s), H: new THREE.Vector3(-s, -s, -s)
   };
 
-  scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(s*2, s*2, s*2)), new THREE.LineBasicMaterial({ color: 0x64748b })));
-  const triGeo = new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E]);
-  scene.add(new THREE.Mesh(triGeo, new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.45 })));
-  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E, pts.B]), new THREE.LineBasicMaterial({ color: 0x7dd3fc })));
+  // 立方體外框線
+  scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(s*2, s*2, s*2)), new THREE.LineBasicMaterial({ color: 0x475569 })));
 
+  // 截面 BDE
+  const triGeo = new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E]);
+  scene.add(new THREE.Mesh(triGeo, new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.B, pts.D, pts.E, pts.B]), new THREE.LineBasicMaterial({ color: 0x60a5fa })));
+
+  // 體對角線 AG 與垂足 P
   const diagLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.A, pts.G]), new THREE.LineBasicMaterial({ color: 0xf97316 }));
   scene.add(diagLine);
 
   const centerP = new THREE.Vector3().add(pts.B).add(pts.D).add(pts.E).divideScalar(3);
-  const dotP = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  const dotP = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
   dotP.position.copy(centerP);
   scene.add(dotP);
 
+  // 輔助等腰稜邊
   const helperGroup = new THREE.Group();
-  const dashMat = new THREE.LineDashedMaterial({ color: 0xfacc15, dashSize: 0.25, gapSize: 0.15 });
+  const dashMat = new THREE.LineDashedMaterial({ color: 0xeab308, dashSize: 0.2, gapSize: 0.12 });
   [pts.B, pts.D, pts.E].forEach(t => {
     const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pts.A, t]), dashMat);
     l.computeLineDistances(); helperGroup.add(l);
   });
   scene.add(helperGroup);
 
+  // 精緻化頂點字體標籤（克制大小、清晰外推距離）
   Object.entries(pts).forEach(([k, v]) => {
+    const isKey = ['A', 'B', 'D', 'E', 'G'].includes(k);
     const c = document.createElement('canvas'); c.width = 128; c.height = 128;
-    const ctx = c.getContext('2d'); ctx.fillStyle = ['A','B','D','E','G'].includes(k) ? '#facc15' : '#94a3b8';
-    ctx.font = 'bold 64px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(k, 64, 64);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) }));
-    sp.position.copy(v).multiplyScalar(1.14); sp.scale.set(1.2, 1.2, 1.2); scene.add(sp);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = isKey ? '#f8fafc' : '#64748b';
+    ctx.font = isKey ? '600 46px -apple-system, sans-serif' : '400 38px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(k, 64, 64);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+    sp.position.copy(v).multiplyScalar(1.13);
+    sp.scale.set(0.95, 0.95, 0.95);
+    scene.add(sp);
   });
 
   let isPerp = false;
@@ -152,7 +208,12 @@
 
   function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
   animate();
-  window.addEventListener('resize', () => { camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+  window.addEventListener('resize', () => {
+    if (!container.clientWidth || !container.clientHeight) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
 </script>
 </body>
 </html>
