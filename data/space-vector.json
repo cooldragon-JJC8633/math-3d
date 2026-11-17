@@ -1,0 +1,7 @@
+math-3d/
+├── index.html                  # 入口總表（自動讀取 JSON 生成題目選單）
+├── data/
+│   └── space-vector.json       # 你以後唯一要維護的「題目與人話解析」設定檔
+└── templates/
+    ├── cube-section.html       # 模板 1：正立方體截面與體對角線垂直
+    └── three-perp.html         # 模板 2：三垂線定理立體動態旋轉
