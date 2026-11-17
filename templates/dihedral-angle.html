@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>3D 互動檢視｜兩平面二面角與法向量</title>
+  <title>3D 互動檢視｜兩平面二面角與角平分面</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -24,17 +24,18 @@
     #btn-mobile-toggle { display: none; }
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
     #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
-    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.9; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
-    #panel { flex: 1; max-width: 430px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.92; padding: 6px 11px; border-radius: 5px; font-size: 11.5px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
-    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
+    .card h2 { font-size: 12px; letter-spacing: 0.05em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
     .card strong { color: var(--text-main); }
     .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .slider-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
-    .angle-readout { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 12.5px; display: flex; justify-content: space-between; }
+    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    button.ctrl.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .slider-box { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
+    .angle-readout { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 12.5px; display: flex; justify-content: space-between; align-items: center; }
+    .formula-box { margin-top: 8px; padding: 9px 11px; border-radius: 6px; background: var(--bg-panel); border-left: 3px solid var(--accent); font-size: 12.5px; color: var(--text-body); }
     input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 6px; }
     @media (max-width: 768px) {
       #btn-mobile-toggle { display: inline-block; }
@@ -48,7 +49,7 @@
 <body>
 <header>
   <a href="../index.html">← 目錄</a>
-  <h1 id="header-title">載入中...</h1>
+  <h1 id="header-title">04. 兩平面二面角與角平分面</h1>
   <div class="header-actions">
     <button id="btn-theme" class="hdr-btn">淺色模式</button>
     <button id="btn-mobile-toggle" class="hdr-btn">隱藏解析</button>
@@ -57,15 +58,15 @@
 
 <div id="main">
   <div id="canvas-container">
-    <div id="hint-badge">單指拖曳旋轉 · 反轉法向量觀察「相等 vs. 互補」</div>
+    <div id="hint-badge">拖曳旋轉 · 點擊「交線側視」可一眼看清銳/鈍二面角與兩片垂直平分面</div>
   </div>
   <div id="panel">
     <div class="card">
-      <h2>題目敘述與角度即時驗證</h2>
-      <p id="q-text"></p>
+      <h2>題目情境與夾角即時調整</h2>
+      <p>給定兩相交平面 $E_1, E_2$，空間中會形成兩組對頂二面角（一銳角 $\theta$、一鈍角 $180^\circ-\theta$），以及兩片互相垂直的角平分面。</p>
       <div class="slider-box">
         <div id="latex-theta"></div>
-        <input type="range" id="slider-angle" min="30" max="150" step="10" value="60" />
+        <input type="range" id="slider-angle" min="25" max="155" step="5" value="60" />
         <div class="angle-readout">
           <span id="readout-dih"></span>
           <span id="readout-norm" style="color: var(--accent); font-weight: 700;"></span>
@@ -74,16 +75,26 @@
     </div>
 
     <div class="card">
-      <h2>法向量反轉與交線側視運鏡</h2>
+      <h2>互動控制：角平分面與法向量</h2>
       <div class="btn-group">
-        <button id="btn-flip" class="ctrl primary">反轉法向量 n2 方向</button>
+        <button id="btn-bisector" class="ctrl active">隱藏角平分面</button>
         <button id="btn-side" class="ctrl">平滑切換「交線側視」</button>
+        <button id="btn-flip" class="ctrl" style="grid-column: span 2;">反轉法向量 $\vec{n}_2$（驗證相等 vs. 互補）</button>
+      </div>
+      <div class="formula-box" id="bisector-note">
+        <strong>角平分面公式：</strong>到兩平面等距的軌跡滿足<br>
+        $\dfrac{|a_1x+b_1y+c_1z-d_1|}{\sqrt{a_1^2+b_1^2+c_1^2}} = \dfrac{|a_2x+b_2y+c_2z-d_2|}{\sqrt{a_2^2+b_2^2+c_2^2}}$<br>
+        拆絕對值取「$+$」或「$-$」，即得兩片<strong>互相垂直（$90^\circ$）</strong>的平面（一為銳角平分面，一為鈍角平分面）。
       </div>
     </div>
 
     <div class="card">
-      <h2>核心解題直覺（3 步判別法）</h2>
-      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+      <h2>段考解題關鍵（3 步口訣）</h2>
+      <ol style="padding-left: 18px; margin: 0;">
+        <li><strong>法向量夾角不直接等於二面角：</strong>先算 $\cos\phi = \frac{\vec{n}_1 \cdot \vec{n}_2}{|\vec{n}_1||\vec{n}_2|}$。若題目求「銳二面角」，直接取正值 $|\cos\phi|$；若求「鈍二面角」，取負值 $-|\cos\phi|$。</li>
+        <li><strong>兩角平分面必互相垂直：</strong>單位法向量 $\hat{n}_1 + \hat{n}_2$ 與 $\hat{n}_1 - \hat{n}_2$ 為菱形對角線，內積恆為 $0$，故兩角平分面夾角必為 $90^\circ$。</li>
+        <li><strong>銳／鈍角平分面判別法：</strong>若已知 $\vec{n}_1 \cdot \vec{n}_2 > 0$（兩法向量夾銳角），畫圖可知兩法向量「夾在鈍二面角區內」，此時法向量相加（取「$+$」號）為<strong>鈍角平分面</strong>，取「$-$」號為<strong>銳角平分面</strong>；最穩妥作法是直接找一已知點代入檢驗。</li>
+      </ol>
     </div>
   </div>
 </div>
@@ -103,36 +114,36 @@
 
   let thetaDeg = 60;
   let isFlipped = false;
+  let showBisector = true;
 
   function updateAngleReadout() {
+    const acute = thetaDeg <= 90 ? thetaDeg : 180 - thetaDeg;
+    const obtuse = 180 - acute;
     const phiDeg = isFlipped ? thetaDeg : (180 - thetaDeg);
     const tEl = document.getElementById('latex-theta');
     const dEl = document.getElementById('readout-dih');
     const nEl = document.getElementById('readout-norm');
-    tEl.innerHTML = `設定兩平面二面角 $\\theta = ${thetaDeg}^\\circ$（${isFlipped ? '法向量一進一出' : '兩法向量皆朝外'}）`;
-    dEl.innerHTML = `二面角 $\\theta = ${thetaDeg}^\\circ$`;
+    tEl.innerHTML = `設定兩平面夾角 $\\theta = ${thetaDeg}^\\circ$（對頂角為 $${acute}^\\circ$ 與 $${obtuse}^\\circ$）`;
+    dEl.innerHTML = `選定二面角 $\\theta = ${thetaDeg}^\\circ$`;
     nEl.innerHTML = `法向量夾角 $\\phi = ${phiDeg}^\\circ$`;
-    if (window.renderMathInElement) { renderMathInElement(tEl, katexOpts); renderMathInElement(dEl, katexOpts); renderMathInElement(nEl, katexOpts); }
+    if (window.renderMathInElement) {
+      renderMathInElement(tEl, katexOpts);
+      renderMathInElement(dEl, katexOpts);
+      renderMathInElement(nEl, katexOpts);
+    }
   }
 
   fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
-    const prob = data.problems.find(p => p.id === probId) || data.problems[4];
-    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
-    document.getElementById('header-title').textContent = `${prob.num}. ${prob.title}`;
-    document.getElementById('q-text').innerHTML = prob.questionLatex;
-    thetaDeg = (prob.params && prob.params.angle) ? prob.params.angle : 60;
-    document.getElementById('slider-angle').value = thetaDeg;
-    const ol = document.getElementById('steps-list');
-    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
-    updateAngleReadout();
-    syncGeometry();
+    const prob = data.problems.find(p => p.id === probId);
+    if (prob && typeof enforcePageLock === "function") enforcePageLock(prob.locked);
     renderMathInElement(document.body, katexOpts);
-  });
+  }).catch(() => renderMathInElement(document.body, katexOpts));
 
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  const camDef = new THREE.Vector3(7.5, 5.5, 9.5), camSide = new THREE.Vector3(0, 1.2, 11.5);
+  const camDef = new THREE.Vector3(7.5, 5.2, 9.8);
+  const camSide = new THREE.Vector3(0, 0.5, 11.5);
   camera.position.copy(camDef);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -147,50 +158,101 @@
   controls.addEventListener('start', () => { targetCamPos = null; });
 
   const th0 = getVisualTheme();
+
   // 交線 L 沿 Z 軸
   const lineLMat = new THREE.LineBasicMaterial({ color: th0.highlight });
-  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -4), new THREE.Vector3(0, 0, 4)]), lineLMat));
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -4.2), new THREE.Vector3(0, 0, 4.2)]), lineLMat));
 
-  // 平面 E1 (固定水平向右延伸 x >= 0)
-  const p1Geo = new THREE.PlaneGeometry(4.5, 6); p1Geo.rotateX(-Math.PI / 2); p1Geo.translate(2.25, 0, 0);
-  const p1Mat = new THREE.MeshBasicMaterial({ color: th0.plane, side: THREE.DoubleSide, transparent: true, opacity: th0.planeOpacity });
+  // 完整雙向延伸平面 E1（水平面 y = 0）
+  const p1Geo = new THREE.PlaneGeometry(7.2, 6.2);
+  p1Geo.rotateX(-Math.PI / 2);
+  const p1Mat = new THREE.MeshBasicMaterial({ color: th0.plane, side: THREE.DoubleSide, transparent: true, opacity: 0.24, depthWrite: false });
   const p1EdgeMat = new THREE.LineBasicMaterial({ color: th0.planeEdge });
   scene.add(new THREE.Mesh(p1Geo, p1Mat));
   scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(p1Geo), p1EdgeMat));
 
-  // 平面 E2 (可繞 Z 軸旋轉)
+  // 完整雙向延伸平面 E2（可繞 Z 軸旋轉）
   const p2Pivot = new THREE.Group();
-  const p2Geo = new THREE.PlaneGeometry(4.5, 6); p2Geo.rotateX(-Math.PI / 2); p2Geo.translate(2.25, 0, 0);
-  const p2Mat = new THREE.MeshBasicMaterial({ color: th0.secondary, side: THREE.DoubleSide, transparent: true, opacity: th0.planeOpacity });
+  const p2Geo = new THREE.PlaneGeometry(7.2, 6.2);
+  p2Geo.rotateX(-Math.PI / 2);
+  const p2Mat = new THREE.MeshBasicMaterial({ color: th0.secondary, side: THREE.DoubleSide, transparent: true, opacity: 0.24, depthWrite: false });
   const p2EdgeMat = new THREE.LineBasicMaterial({ color: th0.secondary });
   p2Pivot.add(new THREE.Mesh(p2Geo, p2Mat));
   p2Pivot.add(new THREE.LineSegments(new THREE.EdgesGeometry(p2Geo), p2EdgeMat));
   scene.add(p2Pivot);
 
-  // 法向量 n1 (固定朝下，朝向外側) 與 n2 (朝向上外側，可反轉)
-  const arrowN1 = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(2.2, 0, 0), 2.8, th0.planeEdge, 0.35, 0.22);
-  const arrowN2 = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(2.2, 0, 0), 2.8, th0.primary, 0.35, 0.22);
+  // 兩片互相垂直的角平分面 B1（平分 theta）與 B2（平分 180 - theta）
+  const bisectorGroup = new THREE.Group();
+  const b1Pivot = new THREE.Group();
+  const b2Pivot = new THREE.Group();
+  const bGeo = new THREE.PlaneGeometry(6.4, 5.6);
+  bGeo.rotateX(-Math.PI / 2);
+
+  const b1Mat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.22, depthWrite: false });
+  const b1Edge = new THREE.LineBasicMaterial({ color: 0x10b981 });
+  b1Pivot.add(new THREE.Mesh(bGeo, b1Mat));
+  b1Pivot.add(new THREE.LineSegments(new THREE.EdgesGeometry(bGeo), b1Edge));
+
+  const b2Mat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.22, depthWrite: false });
+  const b2Edge = new THREE.LineBasicMaterial({ color: 0xf59e0b });
+  b2Pivot.add(new THREE.Mesh(bGeo, b2Mat));
+  b2Pivot.add(new THREE.LineSegments(new THREE.EdgesGeometry(bGeo), b2Edge));
+
+  bisectorGroup.add(b1Pivot, b2Pivot);
+  scene.add(bisectorGroup);
+
+  // 法向量 n1（固定朝下）與 n2（可反轉）
+  const arrowN1 = new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(2.0, 0, 0), 2.4, th0.planeEdge, 0.32, 0.2);
+  const arrowN2 = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(2.0, 0, 0), 2.4, th0.primary, 0.32, 0.2);
   scene.add(arrowN1);
   p2Pivot.add(arrowN2);
 
+  const spB1 = makeThemeSprite('銳角平分面', 'textHighlight', new THREE.Vector3(3.1, 0, 2.2), [2.1, 0.5, 1]);
+  const spB2 = makeThemeSprite('鈍角平分面', 'textHighlight', new THREE.Vector3(3.1, 0, -2.2), [2.1, 0.5, 1]);
+  b1Pivot.add(spB1);
+  b2Pivot.add(spB2);
+
   const sprites = [
-    makeThemeSprite('E1', 'textAccent', new THREE.Vector3(4.2, -0.35, 2.5), [1.1, 0.5, 1]),
-    makeThemeSprite('n1', 'textAccent', new THREE.Vector3(2.2, -3.1, 0), [1.1, 0.5, 1]),
-    makeThemeSprite('交線 L', 'textHighlight', new THREE.Vector3(0, 0.35, 3.8), [1.6, 0.5, 1])
+    makeThemeSprite('E1', 'textAccent', new THREE.Vector3(3.3, -0.3, 2.7), [0.9, 0.45, 1]),
+    makeThemeSprite('n1', 'textAccent', new THREE.Vector3(2.0, -2.7, 0), [0.9, 0.45, 1]),
+    makeThemeSprite('交線 L', 'textHighlight', new THREE.Vector3(0, 0.35, 3.9), [1.5, 0.45, 1]),
+    spB1, spB2
   ];
-  sprites.forEach(sp => scene.add(sp));
+  scene.add(sprites[0], sprites[1], sprites[2]);
 
   function syncGeometry() {
     const rad = THREE.MathUtils.degToRad(thetaDeg);
     p2Pivot.rotation.z = rad;
+    // B1 平分 [0, rad] 區間，B2 與之垂直 (+90 度)
+    b1Pivot.rotation.z = rad / 2;
+    b2Pivot.rotation.z = rad / 2 + Math.PI / 2;
+
+    // 動態切換「銳角/鈍角平分面」標籤（當 theta > 90 時，B1 變成鈍角平分面）
+    const b1IsAcute = thetaDeg <= 90;
+    spB1.userData.text = b1IsAcute ? '銳角平分面' : '鈍角平分面';
+    spB2.userData.text = b1IsAcute ? '鈍角平分面' : '銳角平分面';
+    refreshSpriteTexture(spB1);
+    refreshSpriteTexture(spB2);
+
     arrowN2.setDirection(new THREE.Vector3(0, isFlipped ? -1 : 1, 0));
   }
+
+  updateAngleReadout();
+  syncGeometry();
 
   document.getElementById('slider-angle').addEventListener('input', e => {
     thetaDeg = Number(e.target.value);
     updateAngleReadout();
     syncGeometry();
   });
+
+  document.getElementById('btn-bisector').onclick = (e) => {
+    showBisector = !showBisector;
+    bisectorGroup.visible = showBisector;
+    e.target.textContent = showBisector ? '隱藏角平分面' : '顯示角平分面';
+    e.target.classList.toggle('active', showBisector);
+  };
+
   document.getElementById('btn-flip').onclick = () => {
     isFlipped = !isFlipped;
     updateAngleReadout();
@@ -198,8 +260,9 @@
   };
 
   let isSide = false;
-  document.getElementById('btn-side').onclick = () => {
+  document.getElementById('btn-side').onclick = (e) => {
     isSide = !isSide;
+    e.target.classList.toggle('active', isSide);
     smoothMoveTo(isSide ? camSide : camDef);
   };
 
@@ -208,21 +271,28 @@
     e.target.textContent = isL ? '深色模式' : '淺色模式';
     const th = getVisualTheme();
     lineLMat.color.setHex(th.highlight);
-    p1Mat.color.setHex(th.plane); p1Mat.opacity = th.planeOpacity; p1EdgeMat.color.setHex(th.planeEdge);
-    p2Mat.color.setHex(th.secondary); p2Mat.opacity = th.planeOpacity; p2EdgeMat.color.setHex(th.secondary);
-    arrowN1.setColor(new THREE.Color(th.planeEdge)); arrowN2.setColor(new THREE.Color(th.primary));
+    p1Mat.color.setHex(th.plane); p1EdgeMat.color.setHex(th.planeEdge);
+    p2Mat.color.setHex(th.secondary); p2EdgeMat.color.setHex(th.secondary);
+    arrowN1.setColor(new THREE.Color(th.planeEdge));
+    arrowN2.setColor(new THREE.Color(th.primary));
     sprites.forEach(refreshSpriteTexture);
   };
 
   function animate() {
     requestAnimationFrame(animate);
-    if (targetCamPos) { camera.position.lerp(targetCamPos, 0.08); if (camera.position.distanceTo(targetCamPos) < 0.05) targetCamPos = null; }
-    controls.update(); renderer.render(scene, camera);
+    if (targetCamPos) {
+      camera.position.lerp(targetCamPos, 0.08);
+      if (camera.position.distanceTo(targetCamPos) < 0.05) targetCamPos = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
   }
   animate();
+
   window.addEventListener('resize', () => {
     if (!container.clientWidth || !container.clientHeight) return;
-    camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix();
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
   });
 </script>
