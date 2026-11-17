@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>3D 互動檢視｜兩平面二面角與法向量</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root { --bg-base: #0b0f19; --bg-panel: #131a2a; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; }
+    header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #btn-mobile-toggle { display: none; background: #1e293b; border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
+    #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(11, 15, 25, 0.75); padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 420px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #cbd5e1; margin: 4px 0; }
+    .card strong { color: var(--text-main); }
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button.ctrl { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); padding: 9px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .slider-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
+    .status-bar { margin-top: 8px; background: #131a2a; padding: 8px 10px; border-radius: 6px; font-size: 12.5px; line-height: 1.6; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 6px; }
+    @media (max-width: 768px) {
+      #btn-mobile-toggle { display: inline-block; }
+      #main { flex-direction: column; }
+      #canvas-container { flex: 1; }
+      #panel { max-width: 100%; flex: 1.05; border-left: none; border-top: 1px solid var(--border); }
+      #panel.collapsed { display: none; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 目錄</a>
+  <h1 id="header-title">載入中...</h1>
+  <button id="btn-mobile-toggle">隱藏解析</button>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="hint-badge">單指拖曳旋轉 · 觀察法向量夾角與二面角關係</div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <h2>題目敘述與角度聯動</h2>
+      <p id="q-text"></p>
+      <div class="slider-box">
+        <div id="latex-angle"></div>
+        <input type="range" id="slider-deg" min="30" max="150" step="15" value="60" />
+        <div class="status-bar" id="latex-relation"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>法向量方向與視角切換</h2>
+      <div class="btn-group">
+        <button id="btn-flip" class="ctrl primary">反轉法向量 $\vec{n}_2$ 方向</button>
+        <button id="btn-side" class="ctrl">切換「沿交線側視」視角</button>
+        <button id="btn-reset" class="ctrl">重設預設 3D 視角</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>核心解題直覺（3 步拆解）</h2>
+      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
+  const urlParams = new URLSearchParams(window.location.search);
+  const probId = urlParams.get('id') || 'vec-04';
+
+  const toggleBtn = document.getElementById('btn-mobile-toggle');
+  const panelEl = document.getElementById('panel');
+  toggleBtn.onclick = () => {
+    panelEl.classList.toggle('collapsed');
+    toggleBtn.textContent = panelEl.classList.contains('collapsed') ? '顯示解析' : '隱藏解析';
+    window.dispatchEvent(new Event('resize'));
+  };
+
+  let currentDeg = 60;
+  let flipN2 = false; // false: 兩法向量皆朝上/朝外 (夾角 = 180 - 二面角)
+
+  function updateUI() {
+    const nAngle = flipN2 ? currentDeg : (180 - currentDeg);
+    const relText = flipN2
+      ? `法向量一進一出 $\\Rightarrow$ <strong>夾角 $=$ 二面角 $= ${nAngle}^\\circ$</strong>`
+      : `法向量同時朝外 $\\Rightarrow$ <strong>夾角 $= 180^\\circ - ${currentDeg}^\\circ = ${nAngle}^\\circ$（互補）</strong>`;
+    const el1 = document.getElementById('latex-angle');
+    const el2 = document.getElementById('latex-relation');
+    el1.innerHTML = `設定兩半平面二面角 $\\theta = ${currentDeg}^\\circ$`;
+    el2.innerHTML = relText;
+    if (window.renderMathInElement) {
+      renderMathInElement(el1, katexOpts);
+      renderMathInElement(el2, katexOpts);
+    }
+  }
+
+  fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
+    const prob = data.problems.find(p => p.id === probId) || data.problems[3];
+    document.getElementById('header-title').textContent = `${prob.num || '04'}. ${prob.title}`;
+    document.getElementById('q-text').innerHTML = prob.questionLatex;
+    const ol = document.getElementById('steps-list');
+    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+    updateUI();
+    renderMathInElement(document.body, katexOpts);
+  });
+
+  // Three.js 建構兩半平面與法向量箭頭
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+  const camDef = [8.5, 6.2, 9.5], camSide = [0, 1.5, 11];
+  camera.position.set(...camDef);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  // 交線 L (沿 Z 軸)
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-4), new THREE.Vector3(0,0,4)]), new THREE.LineBasicMaterial({ color: 0xfacc15 })));
+
+  // 固定水平半平面 E1 (向 +X 延伸)
+  const geoE1 = new THREE.PlaneGeometry(4, 6);
+  geoE1.rotateX(-Math.PI / 2);
+  geoE1.translate(2, 0, 0);
+  scene.add(new THREE.Mesh(geoE1, new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })));
+
+  // 可旋轉半平面 E2
+  const pivotE2 = new THREE.Group();
+  const geoE2 = new THREE.PlaneGeometry(4, 6);
+  geoE2.rotateX(-Math.PI / 2);
+  geoE2.translate(2, 0, 0);
+  pivotE2.add(new THREE.Mesh(geoE2, new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })));
+  scene.add(pivotE2);
+
+  // 法向量 n1 (從 (2,0,0) 朝 +Y)
+  const arrowN1 = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(1.8, 0, 0), 2.8, 0x60a5fa, 0.35, 0.22);
+  scene.add(arrowN1);
+
+  // 法向量 n2 (綁定在 pivotE2 上，隨平面一起旋轉)
+  const arrowN2 = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(1.8, 0, 0), 2.8, 0x34d399, 0.35, 0.22);
+  pivotE2.add(arrowN2);
+
+  function syncGeometry() {
+    const rad = THREE.MathUtils.degToRad(currentDeg);
+    pivotE2.rotation.z = rad;
+    arrowN2.setDirection(new THREE.Vector3(0, flipN2 ? -1 : 1, 0));
+    updateUI();
+  }
+  syncGeometry();
+
+  document.getElementById('slider-deg').addEventListener('input', e => {
+    currentDeg = Number(e.target.value);
+    syncGeometry();
+  });
+  document.getElementById('btn-flip').onclick = () => { flipN2 = !flipN2; syncGeometry(); };
+  document.getElementById('btn-side').onclick = () => { camera.position.set(...camSide); controls.target.set(0, 1, 0); };
+  document.getElementById('btn-reset').onclick = () => { camera.position.set(...camDef); controls.target.set(0, 0, 0); };
+
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => {
+    if (!container.clientWidth || !container.clientHeight) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+</script>
+</body>
+</html>
