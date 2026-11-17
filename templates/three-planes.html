@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>3D 互動檢視｜空間三平面相交幾何形態</title>
+  <title>3D 互動檢視｜空間三平面相交 8 種形態</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -23,16 +23,17 @@
     #btn-mobile-toggle { display: none; }
     #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
     #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
-    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.88; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
-    #panel { flex: 1; max-width: 430px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.9; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
-    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
+    .card h2 { font-size: 12px; letter-spacing: 0.05em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13px; line-height: 1.65; color: var(--text-body); margin: 4px 0; }
     .card strong { color: var(--text-main); }
-    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 9px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 8px 9px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     button.ctrl.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .diag-box { margin-top: 10px; padding: 10px; border-radius: 6px; background: var(--bg-panel); border: 1px solid var(--border); font-size: 13px; line-height: 1.6; }
+    .sol-tag { font-size: 10.5px; padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,0.12); }
+    .diag-box { margin-top: 10px; padding: 10px 12px; border-radius: 6px; background: var(--bg-panel); border-left: 3px solid var(--accent); font-size: 13px; line-height: 1.65; }
     @media (max-width: 768px) {
       #btn-mobile-toggle { display: inline-block; }
       #main { flex-direction: column; }
@@ -45,7 +46,7 @@
 <body>
 <header>
   <a href="../index.html">← 目錄</a>
-  <h1 id="header-title">載入中...</h1>
+  <h1 id="header-title">三元一次方程組與三平面相交（完整 8 種形態）</h1>
   <div class="header-actions">
     <button id="btn-theme" class="hdr-btn">淺色模式</button>
     <button id="btn-mobile-toggle" class="hdr-btn">隱藏解析</button>
@@ -54,28 +55,31 @@
 
 <div id="main">
   <div id="canvas-container">
-    <div id="hint-badge">單指拖曳旋轉 · 切換觀察三平面相交與解的個數</div>
+    <div id="hint-badge">單指拖曳旋轉 · 點選右側按鈕切換空間三平面 8 種相對位置</div>
   </div>
   <div id="panel">
     <div class="card">
-      <h2>題目敘述與克拉瑪法則幾何對照</h2>
-      <p id="q-text"></p>
-    </div>
-
-    <div class="card">
-      <h2>切換三平面相交形態（4 大必考模型）</h2>
+      <h2>切換三平面相交形態（完整 8 種分類）</h2>
       <div class="mode-grid" id="mode-btns">
-        <button class="ctrl active" data-mode="0">1. 交於唯一一點（恰一解）</button>
-        <button class="ctrl" data-mode="1">2. 三平面交於一線（無限多解）</button>
-        <button class="ctrl" data-mode="2">3. 三角柱狀兩兩相交（無解）</button>
-        <button class="ctrl" data-mode="3">4. 兩平行面被第三面截（無解）</button>
+        <button class="ctrl active" data-mode="0"><span>1. 交於唯一一點</span><span class="sol-tag">恰一解</span></button>
+        <button class="ctrl" data-mode="1"><span>2. 三平面交於一線</span><span class="sol-tag">無限解</span></button>
+        <button class="ctrl" data-mode="2"><span>3. 三角柱兩兩相交</span><span class="sol-tag">無解</span></button>
+        <button class="ctrl" data-mode="3"><span>4. 兩平行一相交</span><span class="sol-tag">無解</span></button>
+        <button class="ctrl" data-mode="4"><span>5. 三平面互相平行</span><span class="sol-tag">無解</span></button>
+        <button class="ctrl" data-mode="5"><span>6. 兩重合一相交</span><span class="sol-tag">無限解</span></button>
+        <button class="ctrl" data-mode="6"><span>7. 兩重合一平行</span><span class="sol-tag">無解</span></button>
+        <button class="ctrl" data-mode="7"><span>8. 三平面完全重合</span><span class="sol-tag">無限解</span></button>
       </div>
       <div class="diag-box" id="mode-desc"></div>
     </div>
 
     <div class="card">
-      <h2>核心解題直覺（3 步判別法）</h2>
-      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+      <h2>段考實戰判別順序（3 步秒殺）</h2>
+      <ol style="padding-left: 18px; margin: 0;">
+        <li><strong>先看三條法向量是否成比例（平行/重合）：</strong>直接肉眼檢查係數比 $a_1:b_1:c_1$。只要有兩式法向量成比例，立刻用常數項 $d$ 區分「重合（對應 6、7、8）」或「平行無解（對應 4、5、7）」，完全不用算行列式。</li>
+        <li><strong>無平行面時，算係數行列式 $\Delta$：</strong>若 $\Delta \neq 0$，三法向量不共面，必為「<strong>1. 交於唯一一點（恰一解）</strong>」。</li>
+        <li><strong>若 $\Delta = 0$ 且無平行面（只剩 2 或 3）：</strong>直接做<strong>高斯消去法</strong>消掉一個未知數（例如 $z$），觀察剩下的兩條二元一次方程式：若係數與常數全成比例，即為「<strong>2. 交於一線（無限多解）</strong>」；若係數成比例但常數不合（出現 $0 = k$ 矛盾），即為「<strong>3. 三角柱（無解）</strong>」。</li>
+      </ol>
     </div>
   </div>
 </div>
@@ -94,19 +98,14 @@
   };
 
   fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
-    const prob = data.problems.find(p => p.id === probId) || data.problems[data.problems.length - 1];
-    if (typeof enforcePageLock === "function") enforcePageLock(prob.locked);
-    document.getElementById('header-title').textContent = `${prob.num}. ${prob.title}`;
-    document.getElementById('q-text').innerHTML = prob.questionLatex;
-    const ol = document.getElementById('steps-list');
-    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
-    renderMathInElement(document.body, katexOpts);
-  });
+    const prob = data.problems.find(p => p.id === probId);
+    if (prob && typeof enforcePageLock === "function") enforcePageLock(prob.locked);
+  }).catch(() => {});
 
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.set(8.5, 6.5, 9.5);
+  camera.position.set(8.5, 6.2, 9.8);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(container.clientWidth, container.clientHeight);
@@ -116,11 +115,10 @@
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
-  // 建立 3 個半透明平面物件
   function createPlane(colorHex) {
-    const geo = new THREE.PlaneGeometry(6.5, 6.5);
+    const geo = new THREE.PlaneGeometry(6.2, 6.2);
     const group = new THREE.Group();
-    group.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.35 })));
+    group.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide, transparent: true, opacity: 0.34, depthWrite: false })));
     group.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: colorHex })));
     scene.add(group);
     return group;
@@ -129,52 +127,81 @@
   const p2 = createPlane(0x10b981); // 綠
   const p3 = createPlane(0xf97316); // 橘
 
-  // 高亮交點與交線標記
-  const pointMarker = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+  const pointMarker = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
   scene.add(pointMarker);
 
-  const lineMarker = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -3.5, 0), new THREE.Vector3(0, 3.5, 0)]), new THREE.LineBasicMaterial({ color: 0xfacc15 }));
+  const lineMarker = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -3.5, 0), new THREE.Vector3(0, 3.5, 0)]),
+    new THREE.LineBasicMaterial({ color: 0xfacc15 })
+  );
   scene.add(lineMarker);
 
   const modeInfos = [
-    "<strong>條件特徵：</strong>$\\Delta \\neq 0$（三法向量不共面）。<br><strong>幾何意義：</strong>如牆角三面相交，唯一交點即為方程組唯一解。",
-    "<strong>條件特徵：</strong>$\\Delta = \\Delta_x = \\Delta_y = \\Delta_z = 0$（三法向量共面且無平行面）。<br><strong>幾何意義：</strong>如書本翻開的三頁，共用同一條交線 $L$（無限多解）。",
-    "<strong>條件特徵：</strong>$\\Delta = 0$，但 $\\Delta_x, \\Delta_y, \\Delta_z$ 不全為 $0$（三法向量共面）。<br><strong>幾何意義：</strong>兩兩相交出三條平行線，圍成中空三角柱（無共同交點，無解）。",
-    "<strong>條件特徵：</strong>兩平面法向量成比例但常數項不成比例（兩平行面）。<br><strong>幾何意義：</strong>兩平行面永不相交，被第三面截出兩條平行線（無解）。"
+    "<strong>1. 交於唯一一點（恰一解）：</strong>$\\Delta \\neq 0$，三法向量不共面。如同牆角三面相交，交於唯一一點。",
+    "<strong>2. 三平面交於一線（無限多解，1 個自由度）：</strong>$\\Delta = \\Delta_x = \\Delta_y = \\Delta_z = 0$，且無兩法向量平行。如同書本翻開的三頁，共用同一條交線 $L$。",
+    "<strong>3. 三角柱狀兩兩相交（無解）：</strong>$\\Delta = 0$，但 $\\Delta_x, \\Delta_y, \\Delta_z$ 不全為 $0$，且無平行面。兩兩交出三條平行線，圍成中空三角柱。",
+    "<strong>4. 兩平面平行，被第三平面所截（無解）：</strong>兩法向量成比例（常數項不成比例），第三面與之相交出兩條平行線，無共同交點。",
+    "<strong>5. 三平面互相平行（無解）：</strong>三組法向量皆成比例，但常數項皆不成比例，如同三層樓板互不相交。",
+    "<strong>6. 兩平面重合，與第三平面交於一線（無限多解，1 個自由度）：</strong>兩方程式完全成比例（重合為同一面），被第三平面切出一條交線。",
+    "<strong>7. 兩平面重合，與第三平面平行（無解）：</strong>兩方程式完全成比例（重合），但第三面與之平行，無任何交點。",
+    "<strong>8. 三平面完全重合（無限多解，2 個自由度）：</strong>三條方程式係數與常數項皆成比例，三面合為同一張平面。"
   ];
 
   function setMode(idx) {
     document.querySelectorAll('#mode-btns button').forEach((b, i) => b.classList.toggle('active', i === idx));
     const descEl = document.getElementById('mode-desc');
     descEl.innerHTML = modeInfos[idx];
-    renderMathInElement(descEl, katexOpts);
+    if (window.renderMathInElement) renderMathInElement(descEl, katexOpts);
 
-    // 重置位置與旋轉
     [p1, p2, p3].forEach(p => { p.position.set(0, 0, 0); p.rotation.set(0, 0, 0); });
     pointMarker.visible = false;
     lineMarker.visible = false;
+    lineMarker.rotation.set(0, 0, 0);
+    lineMarker.position.set(0, 0, 0);
 
     if (idx === 0) {
-      // 交於一點 (三互相垂直平面)
+      // 1. 交於唯一一點
       p1.rotation.x = Math.PI / 2;
       p2.rotation.y = Math.PI / 2;
       pointMarker.visible = true;
     } else if (idx === 1) {
-      // 交於一線 (繞 Y 軸旋轉 0°, 60°, 120°)
+      // 2. 交於一線
       p1.rotation.y = 0;
       p2.rotation.y = Math.PI / 3;
       p3.rotation.y = (2 * Math.PI) / 3;
       lineMarker.visible = true;
     } else if (idx === 2) {
-      // 三角柱兩兩相交
+      // 3. 三角柱無解
       p1.rotation.y = 0; p1.position.set(0, 0, 1.1);
       p2.rotation.y = (2 * Math.PI) / 3; p2.position.set(0.95, 0, -0.55);
       p3.rotation.y = (4 * Math.PI) / 3; p3.position.set(-0.95, 0, -0.55);
     } else if (idx === 3) {
-      // 兩平行面被第三面截
+      // 4. 兩平行一相交
       p1.rotation.x = Math.PI / 2; p1.position.y = 1.4;
       p2.rotation.x = Math.PI / 2; p2.position.y = -1.4;
       p3.rotation.x = Math.PI / 5;
+    } else if (idx === 4) {
+      // 5. 三平面互相平行
+      p1.rotation.x = Math.PI / 2; p1.position.y = 1.8;
+      p2.rotation.x = Math.PI / 2; p2.position.y = 0;
+      p3.rotation.x = Math.PI / 2; p3.position.y = -1.8;
+    } else if (idx === 5) {
+      // 6. 兩重合一相交（p1 與 p2 極微小間距模擬重合，避免閃爍並保留雙色邊框）
+      p1.rotation.x = Math.PI / 2; p1.position.y = 0.03;
+      p2.rotation.x = Math.PI / 2; p2.position.y = -0.03;
+      p3.rotation.x = Math.PI / 4;
+      lineMarker.rotation.z = Math.PI / 2;
+      lineMarker.visible = true;
+    } else if (idx === 6) {
+      // 7. 兩重合一平行
+      p1.rotation.x = Math.PI / 2; p1.position.y = 1.13;
+      p2.rotation.x = Math.PI / 2; p2.position.y = 1.07;
+      p3.rotation.x = Math.PI / 2; p3.position.y = -1.3;
+    } else if (idx === 7) {
+      // 8. 三平面完全重合
+      p1.rotation.x = Math.PI / 2; p1.position.y = 0.05;
+      p2.rotation.x = Math.PI / 2; p2.position.y = 0;
+      p3.rotation.x = Math.PI / 2; p3.position.y = -0.05;
     }
   }
 
