@@ -11,9 +11,9 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <style>
     :root {
-      --bg-base: #0b0f19; --bg-panel: #131a2a; --bg-card: #0f1623;
-      --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9;
-      --text-muted: #94a3b8; --btn-bg: #1e293b; --input-bg: #131a2a;
+      --bg-base: #0f172a; --bg-panel: #162032; --bg-card: #0f172a;
+      --border: #2d3b55; --accent: #3b82f6; --text-main: #f8fafc;
+      --text-muted: #94a3b8; --btn-bg: #1e293b; --input-bg: #162032;
     }
     body.light-theme {
       --bg-base: #f8fafc; --bg-panel: #ffffff; --bg-card: #f1f5f9;
@@ -34,8 +34,6 @@
     #hint-badge { position: absolute; bottom: 12px; left: 12px; background: var(--bg-panel); opacity: 0.92; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
 
     #panel { flex: 1; max-width: 440px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-
-    /* 頂部視角快捷列 + 分頁標籤列 */
     .panel-top { padding: 12px 14px 0 14px; border-bottom: 1px solid var(--border); background: var(--bg-panel); }
     .cam-bar { display: flex; gap: 6px; margin-bottom: 10px; }
     .cam-bar button { flex: 1; }
@@ -63,9 +61,8 @@
 
     button.ctrl { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border); padding: 7px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
     button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    button.ctrl.danger { color: #ef4444; border-color: rgba(239, 68, 68, 0.35); }
+    button.ctrl.danger { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
 
-    /* 清爽分頁版物件清單 */
     .obj-list { display: flex; flex-direction: column; gap: 8px; }
     .obj-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px 12px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); gap: 8px; }
     .obj-sub { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -109,7 +106,6 @@
       </div>
     </div>
 
-    <!-- 分頁 1：建立物件表單 -->
     <div id="tab-build" class="tab-content active">
       <div class="card">
         <h2>1. 新增空間點 $P(x, y, z)$</h2>
@@ -163,7 +159,6 @@
       </div>
     </div>
 
-    <!-- 分頁 2：獨立物件清單與幾何資訊 -->
     <div id="tab-list" class="tab-content">
       <div class="obj-list" id="obj-list"></div>
     </div>
@@ -174,16 +169,12 @@
   const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
   renderMathInElement(document.body, katexOpts);
 
-  // 分頁切換邏輯
   function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
   }
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.onclick = () => switchTab(btn.dataset.tab);
-  });
+  document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
 
-  // 手機版收合面板
   const toggleBtn = document.getElementById('btn-mobile-toggle');
   const panelEl = document.getElementById('panel');
   toggleBtn.onclick = () => {
@@ -192,11 +183,11 @@
     window.dispatchEvent(new Event('resize'));
   };
 
-  // Three.js 場景（高中數學右手座標系：X朝前左、Y朝右、Z朝正上方）
+  // Three.js 場景（調校相機仰角讓 X/Y/Z 三軸清晰分開）
   const container = document.getElementById('canvas-container');
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
-  const camDef = new THREE.Vector3(11.5, 8.5, 11.5);
+  const camDef = new THREE.Vector3(12.5, 6.2, 11.0);
   const camTop = new THREE.Vector3(0.01, 16, 0.01);
   camera.position.copy(camDef);
 
@@ -214,23 +205,38 @@
 
   function m2w(x, y, z) { return new THREE.Vector3(y, z, x); }
 
-  const gridHelper = new THREE.GridHelper(12, 12, 0x334155, 0x1e293b);
+  // 高對比水平地板網格（深色模式下清楚可見）
+  let gridHelper = new THREE.GridHelper(12, 12, 0x64748b, 0x26334d);
   scene.add(gridHelper);
 
-  function makeAxis(dir, color, labelTxt, labelPos) {
-    scene.add(new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), 6.2, color, 0.35, 0.2));
+  // 加粗版立體圓柱座標軸（解決 WebGL 細線在深色模式看不清的問題）
+  function makeThickAxis(endVec, colorHex, labelTxt, labelPos) {
+    const len = endVec.length();
+    const cylGeo = new THREE.CylinderGeometry(0.032, 0.032, len, 12);
+    cylGeo.translate(0, len / 2, 0);
+    const cylMat = new THREE.MeshBasicMaterial({ color: colorHex });
+    const cyl = new THREE.Mesh(cylGeo, cylMat);
+    cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), endVec.clone().normalize());
+    scene.add(cyl);
+
+    const coneGeo = new THREE.ConeGeometry(0.11, 0.32, 16);
+    const cone = new THREE.Mesh(coneGeo, cylMat);
+    cone.position.copy(endVec);
+    cone.quaternion.copy(cyl.quaternion);
+    scene.add(cone);
+
     const c = document.createElement('canvas'); c.width = 64; c.height = 64;
-    const ctx = c.getContext('2d'); ctx.fillStyle = color; ctx.font = 'bold 36px sans-serif';
+    const ctx = c.getContext('2d'); ctx.fillStyle = colorHex; ctx.font = 'bold 38px sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(labelTxt, 32, 32);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
-    sp.position.copy(labelPos); sp.scale.set(0.8, 0.8, 0.8); scene.add(sp);
+    sp.position.copy(labelPos); sp.scale.set(0.85, 0.85, 0.85); scene.add(sp);
   }
-  makeAxis(new THREE.Vector3(0, 0, 1), '#ef4444', 'X', new THREE.Vector3(0, 0.3, 6.6));
-  makeAxis(new THREE.Vector3(1, 0, 0), '#10b981', 'Y', new THREE.Vector3(6.6, 0.3, 0));
-  makeAxis(new THREE.Vector3(0, 1, 0), '#3b82f6', 'Z', new THREE.Vector3(0, 6.6, 0));
+  makeThickAxis(new THREE.Vector3(0, 0, 6.2), '#f87171', 'X', new THREE.Vector3(0, 0.35, 6.7));
+  makeThickAxis(new THREE.Vector3(6.2, 0, 0), '#34d399', 'Y', new THREE.Vector3(6.7, 0.35, 0));
+  makeThickAxis(new THREE.Vector3(0, 6.2, 0), '#60a5fa', 'Z', new THREE.Vector3(0, 6.7, 0));
 
   const userObjects = [];
-  const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+  const palette = ['#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#22d3ee'];
   let colorIdx = 0;
   function nextColor() { return palette[(colorIdx++) % palette.length]; }
 
@@ -249,10 +255,7 @@
     const s1 = document.getElementById('sel-p1');
     const s2 = document.getElementById('sel-p2');
     s1.innerHTML = ''; s2.innerHTML = '';
-    pts.forEach((p, idx) => {
-      s1.add(new Option(p.name, idx));
-      s2.add(new Option(p.name, idx));
-    });
+    pts.forEach((p, idx) => { s1.add(new Option(p.name, idx)); s2.add(new Option(p.name, idx)); });
     if (pts.length >= 2) s2.selectedIndex = 1;
   }
 
@@ -291,11 +294,11 @@
     const col = nextColor();
     const g = new THREE.Group();
     const pos = m2w(x, y, z);
-    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), new THREE.MeshBasicMaterial({ color: col }));
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), new THREE.MeshBasicMaterial({ color: col }));
     dot.position.copy(pos); g.add(dot);
 
     const proj = m2w(x, y, 0);
-    const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, proj]), new THREE.LineDashedMaterial({ color: 0x64748b, dashSize: 0.18, gapSize: 0.12 }));
+    const dash = new THREE.Line(new THREE.BufferGeometry().setFromPoints([pos, proj]), new THREE.LineDashedMaterial({ color: 0x94a3b8, dashSize: 0.2, gapSize: 0.12 }));
     dash.computeLineDistances(); g.add(dash);
 
     const textStr = `${name}(${x},${y},${z})`;
@@ -382,7 +385,7 @@
     const centerOnPlane = nUnit.clone().multiplyScalar(distFromOrigin);
 
     const planeGeo = new THREE.PlaneGeometry(8, 8);
-    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.28 }));
+    const mesh = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, transparent: true, opacity: 0.34 }));
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nUnit);
     mesh.position.copy(centerOnPlane);
     g.add(mesh);
@@ -392,7 +395,7 @@
     edges.position.copy(centerOnPlane);
     g.add(edges);
 
-    g.add(new THREE.ArrowHelper(nUnit, centerOnPlane, 2.4, col, 0.35, 0.22));
+    g.add(new THREE.ArrowHelper(nUnit, centerOnPlane, 2.5, col, 0.38, 0.24));
     scene.add(g);
     userObjects.push({ type: 'plane', label: `平面 ${a}x + ${b}y + ${c}z = ${d}`, sub: `法向量 n = (${a}, ${b}, ${c})`, color: col, group: g });
     renderObjList();
@@ -421,11 +424,12 @@
     addPlane(Number(document.getElementById('pl-a').value), Number(document.getElementById('pl-b').value), Number(document.getElementById('pl-c').value), Number(document.getElementById('pl-d').value));
   };
 
-  // 深淺色模式切換（同步更新 3D 點標籤與基準網格顏色）
   document.getElementById('btn-theme').onclick = (e) => {
     const isLight = document.body.classList.toggle('light-theme');
     e.target.textContent = isLight ? '深色模式' : '淺色模式';
-    gridHelper.material.color.setHex(isLight ? 0xcbd5e1 : 0x334155);
+    scene.remove(gridHelper);
+    gridHelper = new THREE.GridHelper(12, 12, isLight ? 0x94a3b8 : 0x64748b, isLight ? 0xe2e8f0 : 0x26334d);
+    scene.add(gridHelper);
     userObjects.forEach(obj => {
       if (obj.type === 'point' && obj.sprite) {
         obj.sprite.material.map.dispose();
@@ -435,7 +439,7 @@
     });
   };
 
-  // 預設載入一組精簡的「點到平面垂足」結構示範（停留在建立分頁方便直接操作）
+  // 預設載入精簡的「點到平面垂足」結構示範
   addPlane(1, 1, 1, 4, false);
   addPoint('P', 3, 3, 4, false);
   addPoint('H', 1, 1, 2, false);
