@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>3D 互動檢視｜正四面體核心幾何</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root { --bg-base: #0b0f19; --bg-panel: #131a2a; --border: #243049; --accent: #3b82f6; --text-main: #f1f5f9; --text-muted: #94a3b8; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif; }
+    body { margin: 0; background: var(--bg-base); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    header { padding: 10px 16px; background: var(--bg-panel); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    header a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; }
+    header h1 { font-size: 14px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #btn-mobile-toggle { display: none; background: #1e293b; border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+    #main { display: flex; flex: 1; flex-direction: row; overflow: hidden; }
+    #canvas-container { flex: 1.45; position: relative; cursor: grab; touch-action: none; }
+    #hint-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(11, 15, 25, 0.75); padding: 5px 10px; border-radius: 5px; font-size: 11px; color: var(--text-muted); pointer-events: none; border: 1px solid var(--border); }
+    #panel { flex: 1; max-width: 420px; background: var(--bg-panel); border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+    .card h2 { font-size: 12px; letter-spacing: 0.06em; margin: 0 0 8px 0; color: var(--accent); font-weight: 700; }
+    .card p, .card li { font-size: 13.5px; line-height: 1.65; color: #cbd5e1; margin: 4px 0; }
+    .card strong { color: var(--text-main); }
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button.ctrl { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); padding: 9px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    button.ctrl.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .slider-box { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; }
+    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; background: #131a2a; padding: 8px; border-radius: 6px; font-size: 12.5px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); margin-top: 6px; }
+    @media (max-width: 768px) {
+      #btn-mobile-toggle { display: inline-block; }
+      #main { flex-direction: column; }
+      #canvas-container { flex: 1; }
+      #panel { max-width: 100%; flex: 1.05; border-left: none; border-top: 1px solid var(--border); }
+      #panel.collapsed { display: none; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="../index.html">← 目錄</a>
+  <h1 id="header-title">載入中...</h1>
+  <button id="btn-mobile-toggle">隱藏解析</button>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="hint-badge">單指拖曳旋轉 · 觀察高與歪斜線公垂線</div>
+  </div>
+  <div id="panel">
+    <div class="card">
+      <h2>題目敘述與黃金公式聯動</h2>
+      <p id="q-text"></p>
+      <div class="slider-box">
+        <div id="latex-edge"></div>
+        <input type="range" id="slider-edge" min="3" max="12" step="3" value="6" />
+        <div class="calc-grid">
+          <div id="latex-height"></div>
+          <div id="latex-skew"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>空間構造與視角切換</h2>
+      <div class="btn-group">
+        <button id="btn-height" class="ctrl primary">顯示 / 隱藏正高 AH</button>
+        <button id="btn-skew" class="ctrl">顯示 / 隱藏歪斜公垂線 MN</button>
+        <button id="btn-dihedral" class="ctrl">切換「側視兩面角」視角</button>
+        <button id="btn-reset" class="ctrl">重設預設 3D 視角</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>核心解題直覺（3 步拆解）</h2>
+      <ol id="steps-list" style="padding-left: 18px; margin: 0;"></ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  const katexOpts = { delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}] };
+  const urlParams = new URLSearchParams(window.location.search);
+  const probId = urlParams.get('id') || 'vec-03';
+
+  const toggleBtn = document.getElementById('btn-mobile-toggle');
+  const panelEl = document.getElementById('panel');
+  toggleBtn.onclick = () => {
+    panelEl.classList.toggle('collapsed');
+    toggleBtn.textContent = panelEl.classList.contains('collapsed') ? '顯示解析' : '隱藏解析';
+    window.dispatchEvent(new Event('resize'));
+  };
+
+  function fmtCoef(num, root) {
+    return num === 1 ? `\\sqrt{${root}}` : `${num}\\sqrt{${root}}`;
+  }
+
+  function updateEdgeUI(a) {
+    const edgeEl = document.getElementById('latex-edge');
+    const hEl = document.getElementById('latex-height');
+    const sEl = document.getElementById('latex-skew');
+    edgeEl.innerHTML = `設定正四面體稜長 $a = ${a}$`;
+    hEl.innerHTML = `正高 $h = ${fmtCoef(a / 3, 6)}$`;
+    sEl.innerHTML = `歪斜距 $d = ${fmtCoef(a / 2, 2)}$`;
+    if (window.renderMathInElement) {
+      renderMathInElement(edgeEl, katexOpts);
+      renderMathInElement(hEl, katexOpts);
+      renderMathInElement(sEl, katexOpts);
+    }
+  }
+
+  fetch('../data/space-vector.json?v=' + Date.now()).then(r => r.json()).then(data => {
+    const prob = data.problems.find(p => p.id === probId) || data.problems[2];
+    document.getElementById('header-title').textContent = `${prob.num || '03'}. ${prob.title}`;
+    document.getElementById('q-text').innerHTML = prob.questionLatex;
+    const initA = (prob.params && prob.params.edge) ? prob.params.edge : 6;
+    document.getElementById('slider-edge').value = initA;
+    const ol = document.getElementById('steps-list');
+    prob.steps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+    updateEdgeUI(initA);
+    renderMathInElement(document.body, katexOpts);
+  });
+
+  document.getElementById('slider-edge').addEventListener('input', e => updateEdgeUI(Number(e.target.value)));
+
+  // Three.js 正四面體精準座標建構（底面 BCD 在 y = -1.5 平面，重心 H 在 (0, -1.5, 0)）
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 100);
+  const camDef = [8.5, 5.5, 9.5], camDih = [0, 1.2, 11];
+  camera.position.set(...camDef);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  const R = 3.2; // 底面外接圓半徑
+  const yBase = -1.6;
+  const height = R * Math.sqrt(2); // 正四面體高 = sqrt(2) * 底面外接圓半徑
+  const A = new THREE.Vector3(0, yBase + height, 0);
+  const B = new THREE.Vector3(-R, yBase, 0);
+  const C = new THREE.Vector3(R * 0.5, yBase, R * Math.sqrt(3) * 0.5);
+  const D = new THREE.Vector3(R * 0.5, yBase, -R * Math.sqrt(3) * 0.5);
+  const H = new THREE.Vector3(0, yBase, 0); // 底面重心
+  const E = new THREE.Vector3().addVectors(C, D).multiplyScalar(0.5); // CD 中點（看兩面角用）
+  const M = new THREE.Vector3().addVectors(A, B).multiplyScalar(0.5); // AB 中點（歪斜線公垂足）
+
+  // 畫四面體 6 條稜邊
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x64748b });
+  [[A,B],[A,C],[A,D],[B,C],[C,D],[D,B]].forEach(([p1, p2]) => {
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), edgeMat));
+  });
+
+  // 底面半透明填色
+  const baseMesh = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([B, C, D]), new THREE.MeshBasicMaterial({ color: 0x1e293b, side: THREE.DoubleSide, transparent: true, opacity: 0.7 }));
+  scene.add(baseMesh);
+
+  // 構造組 1：正高 AH + 兩面角輔助線 AE, BE
+  const heightGroup = new THREE.Group();
+  heightGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([A, H]), new THREE.LineBasicMaterial({ color: 0xf97316 })));
+  const dashMat = new THREE.LineDashedMaterial({ color: 0x3b82f6, dashSize: 0.2, gapSize: 0.12 });
+  [[A, E], [B, E]].forEach(([p1, p2]) => {
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1, p2]), dashMat);
+    l.computeLineDistances(); heightGroup.add(l);
+  });
+  const dotH = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), new THREE.MeshBasicMaterial({ color: 0xf97316 }));
+  dotH.position.copy(H); heightGroup.add(dotH);
+  scene.add(heightGroup);
+
+  // 構造組 2：對稜 AB 與 CD 的公垂線 ME（預設隱藏，可一鍵切換）
+  const skewGroup = new THREE.Group();
+  skewGroup.visible = false;
+  skewGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([M, E]), new THREE.LineBasicMaterial({ color: 0x10b981 })));
+  [M, E].forEach(pt => {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+    dot.position.copy(pt); skewGroup.add(dot);
+  });
+  scene.add(skewGroup);
+
+  function makeLabel(txt, pos, col, offset = new THREE.Vector3(0, 0.35, 0)) {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+    const ctx = c.getContext('2d'); ctx.fillStyle = col; ctx.font = '600 46px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 64, 64);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+    sp.position.copy(pos).add(offset); sp.scale.set(0.95, 0.95, 0.95); scene.add(sp);
+  }
+  makeLabel('A', A, '#f8fafc', new THREE.Vector3(0, 0.4, 0));
+  makeLabel('B', B, '#f8fafc', new THREE.Vector3(-0.35, -0.1, 0));
+  makeLabel('C', C, '#f8fafc', new THREE.Vector3(0.25, -0.1, 0.25));
+  makeLabel('D', D, '#f8fafc', new THREE.Vector3(0.25, -0.1, -0.25));
+  makeLabel('H', H, '#fb923c', new THREE.Vector3(-0.25, -0.35, 0));
+  makeLabel('N', E, '#60a5fa', new THREE.Vector3(0.35, -0.25, 0));
+
+  document.getElementById('btn-height').onclick = () => { heightGroup.visible = !heightGroup.visible; };
+  document.getElementById('btn-skew').onclick = () => { skewGroup.visible = !skewGroup.visible; };
+  document.getElementById('btn-dihedral').onclick = () => { camera.position.set(...camDih); controls.target.set(0, -0.5, 0); };
+  document.getElementById('btn-reset').onclick = () => { camera.position.set(...camDef); controls.target.set(0, 0, 0); };
+
+  function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => {
+    if (!container.clientWidth || !container.clientHeight) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+</script>
+</body>
+</html>
