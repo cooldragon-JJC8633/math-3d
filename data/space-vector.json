@@ -1,7 +1,38 @@
-math-3d/
-├── index.html                  # 入口總表（自動讀取 JSON 生成題目選單）
-├── data/
-│   └── space-vector.json       # 你以後唯一要維護的「題目與人話解析」設定檔
-└── templates/
-    ├── cube-section.html       # 模板 1：正立方體截面與體對角線垂直
-    └── three-perp.html         # 模板 2：三垂線定理立體動態旋轉
+{
+  "unitTitle": "高二下數A｜空間向量與平面幾何 3D 互動圖解",
+  "subtitle": "手機拖曳旋轉＋一鍵透視輔助線，專治空間感卡關",
+  "problems": [
+    {
+      "id": "vec-01",
+      "tag": "正立方體截面",
+      "title": "正立方體截面 △BDE 與體對角線 AG 垂直",
+      "template": "templates/cube-section.html",
+      "params": {
+        "side": 6
+      },
+      "questionLatex": "正立方體 $ABCD-EFGH$ 邊長為 $a$，求頂點 $A$ 到截面 $\\triangle BDE$ 的距離，並說明為何體對角線 $AG$ 垂直截面 $\\triangle BDE$。",
+      "steps": [
+        "<strong>看對稱性（不用硬算座標）：</strong>$A$ 到 $B, D, E$ 三點距離都是邊長 $a$，而 $G$ 到 $B, D, E$ 距離都是面對角線 $\\sqrt{2}a$。兩個等腰三角錐對底面 $\\triangle BDE$ 頂對頂，連線 $AG$ 一定<strong>正中央垂直穿過</strong>！",
+        "<strong>體積法秒殺高（別硬背點到平面公式）：</strong>四面體 $A-BDE$ 就是切下一個正立方體角錐，體積 $= \\frac{1}{6}a^3$。",
+        "<strong>黃金比例結論：</strong>體對角線 $AG = \\sqrt{3}a$，截面 $\\triangle BDE$ 把 $AG$ 切成 <strong>$1 : 2$</strong> 兩段！所以 $A$ 到截面距離永遠是 $\\frac{1}{3}AG = \\frac{\\sqrt{3}}{3}a$。"
+      ]
+    },
+    {
+      "id": "vec-02",
+      "tag": "三垂線定理",
+      "title": "立體空間中的三垂線定理（兩平面夾角可調）",
+      "template": "templates/three-perp.html",
+      "params": {
+        "heightPA": 4,
+        "distAB": 3,
+        "distBC": 12
+      },
+      "questionLatex": "直線 $PA$ 垂直平面 $E$ 於 $A$ 點，平面 $E$ 上有一直線 $L$。過 $A$ 作 $AB \\perp L$ 於 $B$，且 $C$ 為 $L$ 上一點。已知 $PA = 4, AB = 3, BC = 12$，求斜線段 $PC$ 長度。",
+      "steps": [
+        "<strong>認出「兩垂直推第三垂直」：</strong>第一垂是 $PA \\perp$ 地板（天線垂直地面）；第二垂是地板上 $AB \\perp L$。這兩條抓出來，第三條斜線 $PB$ 就自動跟 $L$ 垂直！",
+        "<strong>把立體拆成兩個直角三角形（降維打擊）：</strong>先看地板上的 $\\triangle ABC$（或直接算斜高 $PB = \\sqrt{4^2+3^2} = 5$）。",
+        "<strong>最後一步畢氏定理：</strong>因為 $PB \\perp L$，所以 $\\triangle PBC$ 是直角三角形，$PC = \\sqrt{PB^2 + BC^2} = \\sqrt{5^2 + 12^2} = 13$。"
+      ]
+    }
+  ]
+}
